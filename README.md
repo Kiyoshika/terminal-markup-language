@@ -14,10 +14,12 @@ The CMake handles the linking/includes.
 Now you can clone this repo, enter the root and:
 ```
 mkdir build && cd build
-cmake -DDEBUG_MODE=ON .. # NOTE: DEBUG_MODE is OFF by default
+cmake -DDEBUG_MODE=ON -DCOMPILE_TESTS=ON ..
 ```
+* `DEBUG_MODE` is `OFF` by default
+* `COMPILE_TESTS` is `ON` by default
 
-An executable called `tml` will be created in `build/src/` directory.
+An executable called `tmlrender` will be created in `build/src/` directory.
 
 ## Usage
 TODO:
