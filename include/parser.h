@@ -15,20 +15,32 @@ extern const char* tml_attribute_text[N_ATTRIBUTE_TYPES];
 
 enum tml_token_type_e
 {
-  TML_TOKEN_NULL = 0x00,      // 0000 0000
+  TML_TOKEN_NULL = 0x00,            // 0000 0000
   // <
-  TML_TOKEN_OPEN_TAG = 0x01,  // 0000 0001
+  TML_TOKEN_OPEN_TAG = (1 << 0u),   // 0000 0001
   // >
-  TML_TOKEN_CLOSE_TAG = 0x02, // 0000 0010
+  TML_TOKEN_CLOSE_TAG = (1 << 1u),  // 0000 0010
+  // a-z, A-Z
+  TML_TOKEN_TEXT = (1 << 2u),       // 0000 0100
+  // =
+  TML_TOKEN_EQUALS = (1 << 3u),     // 0000 1000
+  // /
+  TML_TOKEN_SLASH = (1 << 4u),      // 0001 0000
 };
 
 enum tml_attribute_type_e
 {
   TML_ATTRIBUTE_NULL = -1,
   // fg=...
-  TML_ATTRIBUTE_FOREGROUND = 0x01,  // 0000 0001
+  TML_ATTRIBUTE_FOREGROUND = (1 << 0u),  // 0000 0001
   // bg=...
-  TML_ATTRIBUTE_BACKGROUND = 0x02,  // 0000 0010
+  TML_ATTRIBUTE_BACKGROUND = (1 << 1u),  // 0000 0010
+};
+
+enum tml_state_e
+{
+  TML_STATE_PARSING_TAG_NAME = (1 << 0u),        // 0000 0001
+  TML_STATE_PARSING_TAG_ATTRIBUTE = (1 << 1u),   // 0000 0010
 };
 
 struct parse_context_t
@@ -57,9 +69,10 @@ enum tml_token_type_e
 parser_get_token_type(
   const char current_char);
 
-void
+enum tml_token_type_e
 parser_get_next_expected_token(
   const enum tml_token_type_e current_token);
+
 void
 parser_next_token(
   struct parse_context_t* context);
