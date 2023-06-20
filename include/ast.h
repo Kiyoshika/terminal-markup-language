@@ -11,9 +11,9 @@ struct text_node_t;
 
 enum ast_node_type_e
 {
-  TML_NONE,
-  TML_ROOT,
-  TML_TEXT
+  TML_NONE = -1,
+  TML_TEXT = 0,
+  TML_ROOT
 };
 
 union ast_root_children_u

@@ -1,0 +1,5 @@
+add_executable(parse_root parse_root.c)
+target_include_directories(parse_root PUBLIC ${tml_SOURCE_DIR}/include)
+target_link_libraries(parse_root tml)
+file(COPY parse_root.tml DESTINATION .)
+add_test(NAME parse_root COMMAND parse_root)
