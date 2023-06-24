@@ -3,6 +3,8 @@ add_library(tml
   colours.c
   ast.c
   parser.c
+  parser_internal.c
+  errors.c
 )
 target_include_directories(tml PUBLIC ${tml_SOURCE_DIR}/include)
 

@@ -4,14 +4,12 @@
 #include <stdbool.h>
 #include <string.h>
 #include <ctype.h>
+#include <stdint.h>
 
 #include "ast.h"
 
-#define N_TOKEN_TYPES 2
-#define N_ATTRIBUTE_TYPES 2
-
-extern const char* tml_token_text[N_TOKEN_TYPES];
-extern const char* tml_attribute_text[N_ATTRIBUTE_TYPES];
+extern const char* tml_tag_names[N_TOKEN_TYPES];
+extern const char* tml_attribute_names[N_ATTRIBUTE_TYPES];
 
 enum tml_token_type_e
 {
@@ -29,32 +27,53 @@ enum tml_token_type_e
   TML_TOKEN_SPACE = (1 << 5u),      // 0010 0000
 };
 
-enum tml_attribute_type_e
-{
-  TML_ATTRIBUTE_NULL = -1,
-  // fg=...
-  TML_ATTRIBUTE_FOREGROUND = (1 << 0u),  // 0000 0001
-  // bg=...
-  TML_ATTRIBUTE_BACKGROUND = (1 << 1u),  // 0000 0010
-};
+
 
 enum tml_state_e
 {
-  TML_STATE_OPENING_TAG = (1 << 0u),            // 0000 0001
-  TML_STATE_CLOSING_TAG = (1 << 1u),            // 0000 0010
-  TML_STATE_PARSING_TAG_NAME = (1 << 2u),       // 0000 0100
-  TML_STATE_PARSING_TAG_ATTRIBUTE = (1 << 3u),  // 0000 1000
+  TML_STATE_OPENING_TAG = (1 << 0u),              // 0000 0001
+  TML_STATE_CLOSING_TAG = (1 << 1u),              // 0000 0010
+  TML_STATE_PARSING_TAG_NAME = (1 << 2u),         // 0000 0100
+  TML_STATE_PARSING_ATTRIBUTE_NAME = (1 << 3u),   // 0000 1000
+  TML_STATE_PARSING_ATTRIBUTE_VALUE = (1 << 4u),  // 0001 0000
 };
 
+// manage the entire context of the parser, including an original pointer to the
+// .tml source code, current/next/expected tokens, state management and the current
+// name/attribute buffers.
 struct parse_context_t
 {
+  // the root node <tml> that will contain all subnodes.
+  // this is created when the <tml> tag is first parsed
+  struct ast_t* root_node;
+
+  // the current node we're pointing to in the tree.
+  struct ast_t* reference_node;
+
+  // the original source code buffer and the current pointed-to index (and total length)
   const char* const source_buffer;
   const size_t source_buffer_len;
   size_t source_buffer_idx;
+
+  // enums for state management. peek at the current, previous and expected token
   enum tml_state_e state;
   enum tml_token_type_e current_token;
   enum tml_token_type_e previous_token;
   enum tml_token_type_e expected_token;
+
+  // the current tag or attribute name/value. these are appended to/cleared
+  // during perform_action depending on the current state of the parser
+  char tag_name[TML_TAG_NAME_LEN];
+  char attribute_name[TML_ATTRIBUTE_NAME_LEN];
+  char attribute_value[TML_ATTRIBUTE_VALUE_LEN];
+
+  // lengths for the above buffers so we don't have to repeatedly call strlen()
+  // to size-check when trying to prevent overflowing the buffer. If user tries
+  // making a tag/value longer than the max allowed length, it will be truncated
+  // and eventually a not-found or not-expected error will be thrown.
+  size_t tag_name_len;
+  size_t attribute_name_len;
+  size_t attribute_value_len;
 };
 
 bool
@@ -66,7 +85,7 @@ enum ast_node_type_e
 parser_get_node_type(
   const char* const tag_text);
 
-enum tml_attribute_type_e
+enum ast_attribute_type_e
 parser_get_attribute_type(
   const char* const attribute_text);
 
@@ -80,10 +99,6 @@ parser_get_next_expected_token(
 
 void
 parser_next_token(
-  struct parse_context_t* context);
-
-void
-parser_consume_whitespace(
   struct parse_context_t* context);
 
 // "main loop" of the parser.
