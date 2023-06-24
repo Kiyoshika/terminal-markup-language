@@ -18,7 +18,8 @@ const char* tml_attribute_text[N_ATTRIBUTE_TYPES] = {
 
 bool
 parser_read_source_file(
-  const char* const filepath)
+  const char* const filepath,
+  char* err_msg)
 {
   char* source_buffer = fs_read_file(filepath);
   if (!source_buffer)
@@ -28,17 +29,14 @@ parser_read_source_file(
     .source_buffer = source_buffer,
     .source_buffer_len = strlen(source_buffer),
     .source_buffer_idx = 0,
+    .state = TML_STATE_OPENING_TAG,
     .current_token = TML_TOKEN_NULL,
     .previous_token = TML_TOKEN_NULL,
     .expected_token = TML_TOKEN_OPEN_TAG
   };
 
-  char err_msg[256] = {0};
   bool success = parser_parse(&context, err_msg);
   free(source_buffer);
-
-  if (!success)
-    printf("%s\n", err_msg);
 
   return success;
 }
@@ -121,6 +119,29 @@ parser_get_next_expected_token(
   return TML_TOKEN_NULL;
 }
 
+bool
+parser_perform_token_action(
+  struct parse_context_t* context,
+  char* err_msg)
+{
+  switch (context->current_token)
+  {
+    case TML_TOKEN_OPEN_TAG:
+    {
+      if ((context->state & TML_STATE_OPENING_TAG) == 0)
+      {
+        sprintf(err_msg, "Expected opening tag '<'.");
+        return false;
+      }
+
+      context->state = TML_STATE_PARSING_TAG_NAME;
+      return true;
+    }
+  }
+
+  return true;
+}
+
 void
 parser_next_token(
   struct parse_context_t* context)
@@ -149,6 +170,9 @@ parser_parse(
       sprintf(err_msg, "Unexpected token at pos %zu.", context->source_buffer_idx);
       return false;
     }
+
+    if (!parser_perform_token_action(context, err_msg))
+      return false;
 
     parser_next_token(context);
   }

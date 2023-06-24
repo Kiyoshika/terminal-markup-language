@@ -26,6 +26,7 @@ enum tml_token_type_e
   TML_TOKEN_EQUALS = (1 << 3u),     // 0000 1000
   // /
   TML_TOKEN_SLASH = (1 << 4u),      // 0001 0000
+  TML_TOKEN_SPACE = (1 << 5u),      // 0010 0000
 };
 
 enum tml_attribute_type_e
@@ -39,8 +40,10 @@ enum tml_attribute_type_e
 
 enum tml_state_e
 {
-  TML_STATE_PARSING_TAG_NAME = (1 << 0u),        // 0000 0001
-  TML_STATE_PARSING_TAG_ATTRIBUTE = (1 << 1u),   // 0000 0010
+  TML_STATE_OPENING_TAG = (1 << 0u),            // 0000 0001
+  TML_STATE_CLOSING_TAG = (1 << 1u),            // 0000 0010
+  TML_STATE_PARSING_TAG_NAME = (1 << 2u),       // 0000 0100
+  TML_STATE_PARSING_TAG_ATTRIBUTE = (1 << 3u),  // 0000 1000
 };
 
 struct parse_context_t
@@ -48,6 +51,7 @@ struct parse_context_t
   const char* const source_buffer;
   const size_t source_buffer_len;
   size_t source_buffer_idx;
+  enum tml_state_e state;
   enum tml_token_type_e current_token;
   enum tml_token_type_e previous_token;
   enum tml_token_type_e expected_token;
@@ -55,7 +59,8 @@ struct parse_context_t
 
 bool
 parser_read_source_file(
-  const char* const filepath);
+  const char* const filepath,
+  char* err_msg);
 
 enum ast_node_type_e
 parser_get_node_type(
@@ -85,6 +90,11 @@ parser_consume_whitespace(
 // if it fails, writes into [err_msg].
 bool
 parser_parse(
+  struct parse_context_t* context,
+  char* err_msg);
+
+bool
+parser_perform_token_action(
   struct parse_context_t* context,
   char* err_msg);
 

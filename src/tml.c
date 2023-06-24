@@ -1,4 +1,5 @@
 #include "filesystem.h"
+#include "parser.h"
 
 int
 main(
@@ -18,7 +19,10 @@ main(
     return -1;
   }
 
-  printf("%s\n", source_content);
+  char err_msg[256] = {0};
+  if (!parser_read_source_file(argv[1], err_msg))
+    printf("%s\n", err_msg);
+
   free(source_content);
   return 0;
 }
