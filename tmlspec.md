@@ -34,13 +34,13 @@ Every tag must have a corresponding closing tag `</tag>`. This determines which 
 Attributes and values are tied together with an `=` AND MUST NOT CONTAIN SPACES. For example, this is an illegal attribute definition:
 ```text
 ILLEGAL:
-<tagname attr1 = value1></tagname>
+<tagname attr = value></tagname>
 
 LEGAL:
-<tagname attr1=value1></tagname>
+<tagname attr=value></tagname>
 ```
 
-Every tag/node has a specified list of allowable child nodes. For example, anything can be a child of the root node `<tml>` but you cannot nest `<text>` insde of another `<text>` for example.
+Every tag/node has a specified list of allowable child nodes. For example, anything can be a child of the root node `<tml>` but you cannot nest a `<text>` insde of another `<text>`.
 ```text
 ILLEGAL:
 <tml>
