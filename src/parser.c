@@ -1,5 +1,6 @@
 #include "parser.h"
 #include "parser_internal.h"
+#include "parser_actions.h"
 #include "ast.h"
 #include "filesystem.h"
 #include "errors.h"
@@ -39,7 +40,7 @@ parser_read_source_file(
     .current_token = TML_TOKEN_NULL,
     .next_token = TML_TOKEN_NULL,
     .previous_token = TML_TOKEN_NULL,
-    .expected_token = TML_TOKEN_OPEN_TAG,
+    .expected_token = TML_TOKEN_OPEN_TAG | TML_TOKEN_SPACE,
     .tag_name = {0},
     .attribute_name = {0},
     .attribute_value = {0},
@@ -113,6 +114,7 @@ enum tml_token_type_e
 parser_get_next_expected_token(
   const enum tml_token_type_e current_token)
 {
+
   switch (current_token)
   {
     case TML_TOKEN_OPEN_TAG:
@@ -146,275 +148,31 @@ parser_perform_token_action(
   switch (context->current_token)
   {
     case TML_TOKEN_OPEN_TAG:
-    {
-      if ((context->state & (TML_STATE_OPENING_TAG | TML_STATE_PARSING_TAG_BODY)) == 0)
-      {
-        tml_error_unexpected_token(err_msg, context->source_buffer_idx);
-        return false;
-      }
-
-      if (context->next_token == TML_TOKEN_SLASH)
-        context->is_closing_tag = true;
-
-      // add text body to current node when hitting closing tag.
-      // e.g.,: <text>hello</text>
-      if (context->is_closing_tag && context->state == TML_STATE_PARSING_TAG_BODY)
-      {
-        ast_add_body(current_node, context->tag_body);
-        _parser_reset_body(context);
-      }
-
-      context->state = TML_STATE_PARSING_TAG_NAME;
-      return true;
-    }
+      return _parser_actions_open_tag(context, current_char, &current_node, err_msg);
+      break;
 
     case TML_TOKEN_TEXT:
-    {
-      uint64_t expected_state 
-        = TML_STATE_PARSING_TAG_NAME 
-          | TML_STATE_PARSING_ATTRIBUTE_NAME 
-          | TML_STATE_PARSING_ATTRIBUTE_VALUE
-          | TML_STATE_PARSING_TAG_BODY;
-
-      if ((context->state & expected_state) == 0)
-      {
-        tml_error_unexpected_token(err_msg, context->source_buffer_idx);
-        return false;
-      }
-
-      switch (context->state)
-      {
-
-        case TML_STATE_PARSING_TAG_NAME:
-        {
-          _parser_append_tag_name_char(context, current_char);
-          break;
-        }
-
-        case TML_STATE_PARSING_ATTRIBUTE_NAME:
-        {
-          _parser_append_attribute_name_char(context, current_char);
-          break;
-        }
-
-        case TML_STATE_PARSING_ATTRIBUTE_VALUE:
-        {
-          _parser_append_attribute_value_char(context, current_char);
-          break;
-        }
-
-        case TML_STATE_PARSING_TAG_BODY:
-        {
-          if (!_parser_append_tag_body_char(context, current_char))
-            return false;
-          break;
-        }
-
-        // no-op states
-        case TML_STATE_OPENING_TAG:
-        case TML_STATE_CLOSING_TAG:
-          break;
-      }
-
-      return true;
-    }
+      return _parser_actions_text(context, current_char, &current_node, err_msg);
+      break;
 
     case TML_TOKEN_SPACE:
-    {
-      switch (context->state)
-      {
-        case TML_STATE_PARSING_TAG_NAME:
-        {
-          if (context->tag_name_len > 0)
-          {
-            enum ast_node_type_e node_type = parser_get_node_type(context->tag_name);
-            if (node_type == TML_NODE_NONE)
-            {
-              tml_error_unexpected_tag_name(err_msg, context->tag_name, context->source_buffer_idx);
-              return false;
-            }
-
-            if (!context->is_closing_tag)
-            {
-              current_node = ast_create(node_type, context->reference_node);
-              context->reference_node = current_node;
-              if (!current_node)
-              {
-                tml_error_node_failure(err_msg);
-                return false;
-              }
-              else if (current_node == (void*)0x1)
-              {
-                tml_error_disallowed_child_type(err_msg, context->tag_name, context->source_buffer_idx);
-                return false;
-              }
-              context->state = TML_STATE_PARSING_ATTRIBUTE_NAME;
-            }
-          }
-          return true;
-        }
-
-        case TML_STATE_PARSING_ATTRIBUTE_VALUE:
-        {
-          enum ast_attribute_type_e attribute_type = parser_get_attribute_type(context->attribute_name);
-          if (attribute_type == TML_ATTRIBUTE_NULL)
-          {
-            tml_error_unexpected_attribute_name(err_msg, context->attribute_name, context->source_buffer_idx);
-            return false;
-          }
-
-          if (context->attribute_value_len == 0)
-          {
-            tml_error_empty_attribute_value(err_msg, context->attribute_name, context->source_buffer_idx);
-            return false;
-          }
-
-          if (!ast_add_attribute(current_node, attribute_type, context->attribute_value))
-          {
-            tml_error_node_failure(err_msg);
-            return false;
-          }
-
-          _parser_reset_attribute(context);
-
-          return true;
-        }
-
-        // do nothing with space token otherwise
-        default:
-          return true;
-      }
-    }
+      return _parser_actions_space(context, current_char, &current_node, err_msg);
+      break;
 
     case TML_TOKEN_EQUALS:
-    {
-      if ((context->state & TML_STATE_PARSING_ATTRIBUTE_NAME) == 0)
-      {
-        tml_error_unexpected_token(err_msg, context->source_buffer_idx);
-        return false;
-      }
+      return _parser_actions_equals(context, current_char, &current_node, err_msg);
+      break;
 
-      context->state = TML_STATE_PARSING_ATTRIBUTE_VALUE;
-      return true;
-    }
-
-    // <tml>
-    // <tml bg=black>
     case TML_TOKEN_CLOSE_TAG:
-    {
-      uint64_t expected_state = TML_STATE_PARSING_TAG_NAME | TML_STATE_PARSING_ATTRIBUTE_VALUE;
-      if ((context->state & expected_state) == 0)
-      {
-        tml_error_unexpected_token(err_msg, context->source_buffer_idx);
-        return false;
-      }
-
-      // checking for </tag>
-      if (context->is_closing_tag)
-      {
-        if (parser_get_node_type(context->tag_name) != context->reference_node->type)
-        {
-          tml_error_close_tag_not_matching_parent(err_msg, context->tag_name, context->source_buffer_idx);
-          return false;
-        }
-
-        if (context->reference_node->parent)
-          ast_add_child(context->reference_node->parent, current_node);
-        context->is_closing_tag = false;
-        context->state = TML_STATE_OPENING_TAG;
-        context->reference_node = context->reference_node->parent;
-        _parser_reset_tag_state(context);
-        return true;
-      }
-
-      // if we close a tag while parsing name
-      if (context->state == TML_STATE_PARSING_TAG_NAME)
-      {
-        if (context->tag_name_len == 0)
-        {
-          tml_error_empty_tag_name(err_msg, context->source_buffer_idx);
-          return false;
-        }
-
-        enum ast_node_type_e node_type = parser_get_node_type(context->tag_name);
-        if (node_type == TML_NODE_NONE)
-        {
-          tml_error_unexpected_tag_name(err_msg, context->tag_name, context->source_buffer_idx);
-          return false;
-        }
-
-        current_node = ast_create(node_type, context->reference_node);
-        context->reference_node = current_node;
-        if (!current_node)
-        {
-          tml_error_node_failure(err_msg);
-          return false;
-        }
-        else if (current_node == (void*)0x1)
-        {
-          tml_error_disallowed_child_type(err_msg, context->tag_name, context->source_buffer_idx);
-          return false;
-        }
-      }
-
-      // if we close a tag while parsing attribute value
-      else if (context->state == TML_STATE_PARSING_ATTRIBUTE_VALUE)
-      {
-        if (context->attribute_value_len == 0)
-        {
-          tml_error_empty_attribute_value(err_msg, context->attribute_name, context->source_buffer_idx);
-          return false;
-        }
-
-        enum ast_attribute_type_e attribute_type = parser_get_attribute_type(context->attribute_name);
-        if (attribute_type == TML_ATTRIBUTE_NULL)
-        {
-          tml_error_unexpected_attribute_name(err_msg, context->attribute_name, context->source_buffer_idx);
-          return false;
-        }
-
-        if (!ast_add_attribute(current_node, attribute_type, context->attribute_value))
-        {
-          tml_error_node_failure(err_msg);
-          return false;
-        }
-      }
-
-      // create root node if it hasn't been created already
-      // (root node must be <tml> tag)
-      if (!context->root_node && current_node->type != TML_NODE_ROOT)
-      {
-        tml_error_missing_root_node(err_msg);
-        return false;
-      }
-      else if (!context->root_node)
-      {
-        // transfer ownership
-        context->root_node = current_node;
-        current_node = NULL;
-      }
-      else
-      {
-        if (current_node->type == TML_NODE_ROOT)
-        {
-          tml_error_root_already_exists(err_msg);
-          return false;
-        }
-
-        //ast_add_child(context->reference_node->parent, current_node);
-      }
-
-      if (context->reference_node->contains_body)
-        context->state = TML_STATE_PARSING_TAG_BODY;
-      else
-        context->state = TML_STATE_OPENING_TAG;
-
-      _parser_reset_tag_state(context);
-      return true;
-    } 
+      return _parser_actions_close_tag(context, current_char, &current_node, err_msg);
+      break;
 
     // no-op (shouldn't be encountered)
     case TML_TOKEN_NULL:
+      break;
+
+    // no-op (handled as a special case in TML_TOKEN_OPEN_TAG)
+    case TML_TOKEN_SLASH:
       break;
   }
 

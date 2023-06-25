@@ -4,6 +4,7 @@ add_library(tml
   ast.c
   parser.c
   parser_internal.c
+  parser_actions.c
   errors.c
 )
 target_include_directories(tml PUBLIC ${tml_SOURCE_DIR}/include)

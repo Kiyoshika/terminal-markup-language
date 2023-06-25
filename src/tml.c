@@ -21,7 +21,7 @@ main(
 
   char err_msg[256] = {0};
   if (!parser_read_source_file(argv[1], err_msg))
-    printf("%s\n", err_msg);
+    printf("%s", err_msg);
 
   free(source_content);
   return 0;
