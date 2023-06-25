@@ -99,6 +99,14 @@ This creates a blank red terminal
 <tml bg=red></tml>
 ```
 
+This creates a white terminal where all nodes will have a red foreground by default (whichever ones are applicable):
+```
+<tml bg=white fg=red>
+  <text>I'm red</text>
+  <text fg=green>I'm green</text>
+</tml>
+```
+
 ## New Line
 **Tag Name:** `<newline>`
 
@@ -134,7 +142,7 @@ there
 
 **Attributes:**
 * (optional) `fg` - foreground; the colour of the text itself
-  * default value: `white`
+  * default value: same as parent node
 * (optional) `bg` - background; the background colour of the text
   * default value: same as parent node
 * (optional) `bold` - if present, make text bold
@@ -171,6 +179,10 @@ how are you
 
 **Attributes:**
 * (required) `callback` - function name to call when user submits. callback function must take a single `string` argument
+* (optional) `fg` - the foreground colour of the input box and text inside it
+  * default value: same as parent node
+* (optional) `bg` - the background colour of the input box
+  * default value: same as parent node
 * (optional) `minLength` - min length of the buffer; prevents user from submitting until this length is reached
   * default value: `1`
 * (optional) `maxLength` - max length of the buffer; prevents user from inputting more characters
