@@ -138,14 +138,30 @@ there
 * (optional) `bg` - background; the background colour of the text
   * default value: same as parent node
 * (optional) `bold` - if present, make text bold
-  * default value: false 
+  * default value: `false `
 * (optional) `id` - An ID that can be referenced in callback functions
+* (optional) `newline` - determine whether or not to add a newline after the text is written
+  * default value: `true`
 
 **Examples:**
 ```
 <text>white on black</text> (assuming parent node is black)
 <text bold=true>bold white on black</text> (assuming parent node is black)
 <text fg=red bg=white>red on white</text>
+```
+
+Write multiple text on the same line by disabling `newline` attribute:
+```
+<tml>
+  <text newline=false>hello</text>
+  <text>there</text>
+
+  <text>how are you</text>
+</tml>
+
+RENDERED AS:
+hello there
+how are you
 ```
 
 ## Input
