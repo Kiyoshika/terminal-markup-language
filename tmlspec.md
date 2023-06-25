@@ -36,7 +36,7 @@ Attributes and values are tied together with an `=` AND MUST NOT CONTAIN SPACES.
 ILLEGAL:
 <tagname attr1 = value1></tagname>
 
-LEGA:
+LEGAL:
 <tagname attr1=value1></tagname>
 ```
 
