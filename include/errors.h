@@ -44,4 +44,16 @@ void
 tml_error_root_already_exists(
   char* err_msg);
 
+void
+tml_error_close_tag_not_matching_parent(
+  char* err_msg,
+  const char* const tag_name,
+  const size_t token_position);
+
+void
+tml_error_disallowed_child_type(
+  char* err_msg,
+  const char* const tag_name,
+  const size_t token_position);
+
 #endif

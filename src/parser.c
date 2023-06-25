@@ -27,6 +27,8 @@ parser_read_source_file(
   if (!source_buffer)
     return false;
 
+  size_t tag_body_capacity = 100;
+
   struct parse_context_t context = {
     .root_node = NULL,
     .reference_node = NULL,
@@ -35,6 +37,7 @@ parser_read_source_file(
     .source_buffer_idx = 0,
     .state = TML_STATE_OPENING_TAG,
     .current_token = TML_TOKEN_NULL,
+    .next_token = TML_TOKEN_NULL,
     .previous_token = TML_TOKEN_NULL,
     .expected_token = TML_TOKEN_OPEN_TAG,
     .tag_name = {0},
@@ -42,8 +45,15 @@ parser_read_source_file(
     .attribute_value = {0},
     .tag_name_len = 0,
     .attribute_name_len = 0,
-    .attribute_value_len = 0
+    .attribute_value_len = 0,
+    .is_closing_tag = false,
+    .tag_body_capacity = tag_body_capacity,
+    .tag_body = calloc(tag_body_capacity, sizeof(char)),
+    .tag_body_len = 0,
   };
+
+  if (!context.tag_body)
+    return false;
 
   bool success = parser_parse(&context, err_msg);
   free(source_buffer);
@@ -108,9 +118,9 @@ parser_get_next_expected_token(
     case TML_TOKEN_OPEN_TAG:
       return TML_TOKEN_SPACE | TML_TOKEN_TEXT | TML_TOKEN_SLASH;
     case TML_TOKEN_TEXT:
-      return TML_TOKEN_SPACE | TML_TOKEN_TEXT | TML_TOKEN_EQUALS | TML_TOKEN_CLOSE_TAG;
+      return TML_TOKEN_SPACE | TML_TOKEN_TEXT | TML_TOKEN_EQUALS | TML_TOKEN_OPEN_TAG | TML_TOKEN_CLOSE_TAG;
     case TML_TOKEN_CLOSE_TAG:
-      return TML_TOKEN_SPACE | TML_TOKEN_OPEN_TAG;
+      return TML_TOKEN_SPACE | TML_TOKEN_OPEN_TAG | TML_TOKEN_TEXT;
     case TML_TOKEN_EQUALS:
       return TML_TOKEN_SPACE | TML_TOKEN_TEXT;
     case TML_TOKEN_SLASH:
@@ -137,10 +147,21 @@ parser_perform_token_action(
   {
     case TML_TOKEN_OPEN_TAG:
     {
-      if ((context->state & TML_STATE_OPENING_TAG) == 0)
+      if ((context->state & (TML_STATE_OPENING_TAG | TML_STATE_PARSING_TAG_BODY)) == 0)
       {
         tml_error_unexpected_token(err_msg, context->source_buffer_idx);
         return false;
+      }
+
+      if (context->next_token == TML_TOKEN_SLASH)
+        context->is_closing_tag = true;
+
+      // add text body to current node when hitting closing tag.
+      // e.g.,: <text>hello</text>
+      if (context->is_closing_tag && context->state == TML_STATE_PARSING_TAG_BODY)
+      {
+        ast_add_body(current_node, context->tag_body);
+        _parser_reset_body(context);
       }
 
       context->state = TML_STATE_PARSING_TAG_NAME;
@@ -150,7 +171,10 @@ parser_perform_token_action(
     case TML_TOKEN_TEXT:
     {
       uint64_t expected_state 
-        = TML_STATE_PARSING_TAG_NAME | TML_STATE_PARSING_ATTRIBUTE_NAME | TML_STATE_PARSING_ATTRIBUTE_VALUE;
+        = TML_STATE_PARSING_TAG_NAME 
+          | TML_STATE_PARSING_ATTRIBUTE_NAME 
+          | TML_STATE_PARSING_ATTRIBUTE_VALUE
+          | TML_STATE_PARSING_TAG_BODY;
 
       if ((context->state & expected_state) == 0)
       {
@@ -179,6 +203,13 @@ parser_perform_token_action(
           break;
         }
 
+        case TML_STATE_PARSING_TAG_BODY:
+        {
+          if (!_parser_append_tag_body_char(context, current_char))
+            return false;
+          break;
+        }
+
         // no-op states
         case TML_STATE_OPENING_TAG:
         case TML_STATE_CLOSING_TAG:
@@ -203,14 +234,22 @@ parser_perform_token_action(
               return false;
             }
 
-            current_node = ast_create(node_type, context->reference_node);
-            context->reference_node = current_node;
-            if (!current_node)
+            if (!context->is_closing_tag)
             {
-              tml_error_node_failure(err_msg);
-              return false;
+              current_node = ast_create(node_type, context->reference_node);
+              context->reference_node = current_node;
+              if (!current_node)
+              {
+                tml_error_node_failure(err_msg);
+                return false;
+              }
+              else if (current_node == (void*)0x1)
+              {
+                tml_error_disallowed_child_type(err_msg, context->tag_name, context->source_buffer_idx);
+                return false;
+              }
+              context->state = TML_STATE_PARSING_ATTRIBUTE_NAME;
             }
-            context->state = TML_STATE_PARSING_ATTRIBUTE_NAME;
           }
           return true;
         }
@@ -270,6 +309,24 @@ parser_perform_token_action(
         return false;
       }
 
+      // checking for </tag>
+      if (context->is_closing_tag)
+      {
+        if (parser_get_node_type(context->tag_name) != context->reference_node->type)
+        {
+          tml_error_close_tag_not_matching_parent(err_msg, context->tag_name, context->source_buffer_idx);
+          return false;
+        }
+
+        if (context->reference_node->parent)
+          ast_add_child(context->reference_node->parent, current_node);
+        context->is_closing_tag = false;
+        context->state = TML_STATE_OPENING_TAG;
+        context->reference_node = context->reference_node->parent;
+        _parser_reset_tag_state(context);
+        return true;
+      }
+
       // if we close a tag while parsing name
       if (context->state == TML_STATE_PARSING_TAG_NAME)
       {
@@ -291,6 +348,11 @@ parser_perform_token_action(
         if (!current_node)
         {
           tml_error_node_failure(err_msg);
+          return false;
+        }
+        else if (current_node == (void*)0x1)
+        {
+          tml_error_disallowed_child_type(err_msg, context->tag_name, context->source_buffer_idx);
           return false;
         }
       }
@@ -338,10 +400,15 @@ parser_perform_token_action(
           tml_error_root_already_exists(err_msg);
           return false;
         }
-        // TODO: append child node into root
+
+        //ast_add_child(context->reference_node->parent, current_node);
       }
 
-      context->state = TML_STATE_OPENING_TAG;
+      if (context->reference_node->contains_body)
+        context->state = TML_STATE_PARSING_TAG_BODY;
+      else
+        context->state = TML_STATE_OPENING_TAG;
+
       _parser_reset_tag_state(context);
       return true;
     } 
@@ -368,26 +435,36 @@ parser_parse(
   struct parse_context_t* context,
   char* err_msg)
 {
+  bool status = false;
   while (context->source_buffer_idx < context->source_buffer_len)
   {
-    //parser_consume_whitespace(context);
     if (context->source_buffer_idx >= context->source_buffer_len)
       break;
 
     context->current_token 
       = parser_get_token_type(context->source_buffer[context->source_buffer_idx]);
 
+    if (context->source_buffer_idx + 1 < context->source_buffer_len)
+      context->next_token = parser_get_token_type(context->source_buffer[context->source_buffer_idx + 1]);
+    else
+      context->next_token = TML_TOKEN_NULL;
+
     if ((context->current_token & context->expected_token) == 0)
     {
       tml_error_unexpected_token(err_msg, context->source_buffer_idx);
-      return false;
+      goto cleanup;
     }
 
     if (!parser_perform_token_action(context, err_msg))
-      return false;
+      goto cleanup;
 
     parser_next_token(context);
   }
 
-  return true;
+  status = true;
+cleanup:
+  ast_free(&context->root_node);
+  free(context->tag_body);
+
+  return status;
 }

@@ -34,7 +34,16 @@ _parser_reset_attribute(
   struct parse_context_t* context);
 
 void
+_parser_reset_body(
+  struct parse_context_t* context);
+
+void
 _parser_reset_tag_state(
   struct parse_context_t* context);
+
+bool
+_parser_append_tag_body_char(
+  struct parse_context_t* context,
+  const char c);
 
 #endif

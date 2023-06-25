@@ -54,9 +54,39 @@ _parser_reset_attribute(
 }
 
 void
+_parser_reset_body(
+  struct parse_context_t* context)
+{
+  memset(context->tag_body, 0, context->tag_body_capacity);
+  context->tag_body_len = 0;
+}
+
+void
 _parser_reset_tag_state(
   struct parse_context_t* context)
 {
   _parser_reset_tag_name(context);
   _parser_reset_attribute(context);
+  _parser_reset_body(context);
+}
+
+bool
+_parser_append_tag_body_char(
+  struct parse_context_t* context,
+  const char c)
+{
+  context->tag_body[context->tag_body_len++] = c;
+  if (context->tag_body_len == context->tag_body_capacity)
+  {
+    size_t new_capacity = context->tag_body_capacity * 2;
+    void* alloc = realloc(context->tag_body, new_capacity * sizeof(char));
+    if (!alloc)
+      return false;
+    context->tag_body = alloc;
+    // realloc doesn't guarantee clean zeros
+    for (size_t i = context->tag_body_len; i < context->tag_body_capacity; ++i)
+      context->tag_body[i] = '\0';
+  }
+
+  return true;
 }

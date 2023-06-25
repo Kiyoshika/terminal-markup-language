@@ -36,6 +36,8 @@ enum tml_state_e
   TML_STATE_PARSING_TAG_NAME = (1 << 2u),         // 0000 0100
   TML_STATE_PARSING_ATTRIBUTE_NAME = (1 << 3u),   // 0000 1000
   TML_STATE_PARSING_ATTRIBUTE_VALUE = (1 << 4u),  // 0001 0000
+  // <tag>body</tag>
+  TML_STATE_PARSING_TAG_BODY = (1 << 5u),         // 0010 0000
 };
 
 // manage the entire context of the parser, including an original pointer to the
@@ -58,6 +60,7 @@ struct parse_context_t
   // enums for state management. peek at the current, previous and expected token
   enum tml_state_e state;
   enum tml_token_type_e current_token;
+  enum tml_token_type_e next_token;
   enum tml_token_type_e previous_token;
   enum tml_token_type_e expected_token;
 
@@ -74,6 +77,15 @@ struct parse_context_t
   size_t tag_name_len;
   size_t attribute_name_len;
   size_t attribute_value_len;
+
+  // if we are currently parsing a </tag>
+  bool is_closing_tag;
+
+  // any content inside a tag where ast->contains_body is true
+  // e.g., <text>hello</text>
+  char* tag_body;
+  size_t tag_body_len;
+  size_t tag_body_capacity;
 };
 
 bool

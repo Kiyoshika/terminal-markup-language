@@ -63,3 +63,21 @@ tml_error_root_already_exists(
 {
   sprintf(err_msg, "Root node <tml> already exists.\n");
 }
+
+void
+tml_error_close_tag_not_matching_parent(
+  char* err_msg,
+  const char* const tag_name,
+  const size_t token_position)
+{
+  sprintf(err_msg, "Closing tag </%s> at position %zu does not match its parent.\n", tag_name, token_position);
+}
+
+void
+tml_error_disallowed_child_type(
+  char* err_msg,
+  const char* const tag_name,
+  const size_t token_position)
+{
+  sprintf(err_msg, "Tag <%s> at position %zu cannot be nested with its current parent tag.\n", tag_name, token_position);
+}

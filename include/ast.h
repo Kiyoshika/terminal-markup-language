@@ -39,12 +39,16 @@ struct ast_attribute_pair_t
 struct ast_t
 {
   enum ast_node_type_e type;
+  // labels whether or not a tag could contain a body (e.g., text field)
+  // this does NOT include the root tag <tml></tml>
+  bool contains_body; // <tag>body</tag>
+  char* body;
 
   struct ast_t* parent;
 
   uint64_t allowed_children_nodes; // a bitmap composed of ast_node_type_e
   enum ast_node_type_e* children_types;
-  struct ast_t* children;
+  struct ast_t** children;
   size_t n_children;
   size_t children_capacity;
 
@@ -63,6 +67,16 @@ ast_add_attribute(
   struct ast_t* node,
   enum ast_attribute_type_e type,
   const char* const value);
+
+bool
+ast_add_child(
+  struct ast_t* node,
+  const struct ast_t* const child);
+
+bool
+ast_add_body(
+  struct ast_t* node,
+  const char* const body);
 
 void
 ast_free(
