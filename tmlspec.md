@@ -100,9 +100,9 @@ This creates a blank red terminal
 ```
 
 ## New Line
-**Tag Name:** `<newline>
+**Tag Name:** `<newline>`
 
-*Description:** Adds a new line during rendering.
+**Description:** Adds a new line during rendering.
 
 **Attributes:** None
 
