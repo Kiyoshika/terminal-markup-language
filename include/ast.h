@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <stdint.h>
+#include <ncurses.h>
 
 #include "colours.h"
 
@@ -81,5 +82,9 @@ ast_add_body(
 void
 ast_free(
   struct ast_t** root);
+
+void
+ast_render(
+  const struct ast_t* const root);
 
 #endif

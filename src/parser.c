@@ -220,6 +220,7 @@ parser_parse(
   }
 
   status = true;
+  ast_render(context->root_node);
 cleanup:
   ast_free(&context->root_node);
   free(context->tag_body);

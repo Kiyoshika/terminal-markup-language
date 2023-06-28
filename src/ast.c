@@ -152,3 +152,42 @@ ast_add_body(
   node->body = _body;
   return true;
 }
+
+void
+ast_render(
+  const struct ast_t* const root)
+{
+  // ncurses setup
+  initscr();
+  if (has_colors())
+  {
+    start_color();
+    init_pair(1, COLOR_WHITE, COLOR_BLACK);
+  }
+
+  attrset(COLOR_PAIR(1));
+
+  size_t current_y = 0;
+  size_t current_x = 0;
+
+  for (size_t i = 0; i < root->n_children; ++i)
+  {
+    struct ast_t* child = root->children[i];
+    switch (child->type)
+    {
+      case TML_NODE_TEXT:
+      {
+        move(current_y, current_x);
+        printw("%s", child->body);
+        current_y++;
+        break;
+      }
+
+      case TML_NODE_NONE:
+      case TML_NODE_ROOT:
+        break;
+    }
+  }
+  getch();
+  endwin();
+}
