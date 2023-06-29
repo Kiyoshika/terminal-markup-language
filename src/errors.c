@@ -81,3 +81,12 @@ tml_error_disallowed_child_type(
 {
   sprintf(err_msg, "Tag <%s> at position %zu cannot be nested with its current parent tag.\n", tag_name, token_position);
 }
+
+void
+tml_error_unexpected_attribute_value(
+  char* err_msg,
+  const char* const attribute_value,
+  const size_t token_position)
+{
+  sprintf(err_msg, "Unexpected attribute valube '%s' at position %zu.", attribute_value, token_position);
+}

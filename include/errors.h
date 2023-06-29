@@ -56,4 +56,10 @@ tml_error_disallowed_child_type(
   const char* const tag_name,
   const size_t token_position);
 
+void
+tml_error_unexpected_attribute_value(
+  char* err_msg,
+  const char* const attribute_value,
+  const size_t token_position);
+
 #endif

@@ -16,7 +16,24 @@ const char* tml_tag_names[N_TOKEN_TYPES] = {
 // ast_attribute_type_e in ast.h
 const char* tml_attribute_names[N_ATTRIBUTE_TYPES] = {
   "fg",
-  "bg"
+  "bg",
+  "newline",
+  "bold"
+};
+
+// IMPORTANT: this must be ordered the same as
+// ast_attribute_value_e in ast.h
+const char* tml_attribute_values[N_ATTRIBUTE_VALUES] = {
+  "white",
+  "black",
+  "red",
+  "blue",
+  "yellow",
+  "cyan",
+  "green",
+  "magenta",
+  "true",
+  "false"
 };
 
 bool
@@ -44,6 +61,7 @@ parser_read_source_file(
     .tag_name = {0},
     .attribute_name = {0},
     .attribute_value = {0},
+    .allowed_attribute_values = TML_ATTRIBUTE_VALUE_NONE,
     .tag_name_len = 0,
     .attribute_name_len = 0,
     .attribute_value_len = 0,
@@ -71,6 +89,17 @@ parser_get_node_type(
       return (1 << i);
 
   return TML_NODE_NONE;
+}
+
+enum ast_attribute_value_e
+parser_get_attribute_value(
+  const char* const attribute_value_text)
+{
+  for (size_t i = 0; i < (size_t)N_ATTRIBUTE_VALUES; ++i)
+    if (strcmp(tml_attribute_values[i], attribute_value_text) == 0)
+      return (1 << i);
+
+  return TML_ATTRIBUTE_VALUE_NONE;
 }
 
 enum ast_attribute_type_e

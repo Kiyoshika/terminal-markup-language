@@ -51,6 +51,8 @@ _parser_reset_attribute(
 
   memset(context->attribute_value, 0, TML_ATTRIBUTE_VALUE_LEN);
   context->attribute_value_len = 0;
+
+  context->allowed_attribute_values = TML_ATTRIBUTE_VALUE_NONE;
 }
 
 void
@@ -89,4 +91,37 @@ _parser_append_tag_body_char(
   }
 
   return true;
+}
+
+uint64_t
+_parser_get_allowed_attribute_values(
+  const enum ast_attribute_type_e type)
+{
+  switch (type)
+  {
+    case TML_ATTRIBUTE_FOREGROUND:
+    case TML_ATTRIBUTE_BACKGROUND:
+    {
+      return TML_ATTRIBUTE_VALUE_WHITE
+           | TML_ATTRIBUTE_VALUE_BLACK
+           | TML_ATTRIBUTE_VALUE_RED
+           | TML_ATTRIBUTE_VALUE_BLUE
+           | TML_ATTRIBUTE_VALUE_YELLOW
+           | TML_ATTRIBUTE_VALUE_CYAN
+           | TML_ATTRIBUTE_VALUE_GREEN
+           | TML_ATTRIBUTE_VALUE_MAGENTA;
+    }
+
+    case TML_ATTRIBUTE_NEWLINE:
+    case TML_ATTRIBUTE_BOLD:
+    {
+      return TML_ATTRIBUTE_VALUE_TRUE
+           | TML_ATTRIBUTE_VALUE_FALSE;
+    }
+
+    case TML_ATTRIBUTE_NULL:
+      return TML_ATTRIBUTE_VALUE_NONE;
+  }
+
+  return TML_ATTRIBUTE_VALUE_NONE;
 }

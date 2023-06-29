@@ -1,6 +1,8 @@
 #ifndef TML_PARSER_INTERNAL_H
 #define TML_PARSER_INTERNAL_H
 
+#include <stdint.h>
+
 struct parse_context_t;
 
 /*
@@ -45,5 +47,9 @@ bool
 _parser_append_tag_body_char(
   struct parse_context_t* context,
   const char c);
+
+uint64_t
+_parser_get_allowed_attribute_values(
+  const enum ast_attribute_type_e type);
 
 #endif

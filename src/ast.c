@@ -58,14 +58,13 @@ ast_create(
 bool
 ast_add_attribute(
   struct ast_t* node,
-  enum ast_attribute_type_e type,
-  const char* const value)
+  const enum ast_attribute_type_e type,
+  const enum ast_attribute_value_e value)
 {
   struct ast_attribute_pair_t attribute = {
     .type = type,
-    .value = {0}
+    .value = value
   };
-  strncat(attribute.value, value, TML_ATTRIBUTE_VALUE_LEN);
 
   memcpy(&node->attributes[node->n_attributes++], &attribute, sizeof(attribute));
   
@@ -157,6 +156,9 @@ void
 ast_render(
   const struct ast_t* const root)
 {
+  // TODO: finish this by reading node->attributes[i].attribute_value and type
+  // to set different colours and such
+
   // ncurses setup
   initscr();
   if (has_colors())
