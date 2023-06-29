@@ -10,6 +10,7 @@
 
 extern const char* tml_tag_names[N_TOKEN_TYPES];
 extern const char* tml_attribute_names[N_ATTRIBUTE_TYPES];
+extern const char* tml_attribute_values[N_ATTRIBUTE_VALUES];
 
 enum tml_token_type_e
 {
@@ -69,6 +70,7 @@ struct parse_context_t
   char tag_name[TML_TAG_NAME_LEN];
   char attribute_name[TML_ATTRIBUTE_NAME_LEN];
   char attribute_value[TML_ATTRIBUTE_VALUE_LEN];
+  uint64_t allowed_attribute_values;
 
   // lengths for the above buffers so we don't have to repeatedly call strlen()
   // to size-check when trying to prevent overflowing the buffer. If user tries
@@ -100,6 +102,10 @@ parser_get_node_type(
 enum ast_attribute_type_e
 parser_get_attribute_type(
   const char* const attribute_text);
+
+enum ast_attribute_value_e
+parser_get_attribute_value(
+  const char* const attribute_value_text);
 
 enum tml_token_type_e
 parser_get_token_type(

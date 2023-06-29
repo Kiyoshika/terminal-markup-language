@@ -136,6 +136,8 @@ _parser_actions_space(
     case TML_STATE_PARSING_ATTRIBUTE_VALUE:
     {
       enum ast_attribute_type_e attribute_type = parser_get_attribute_type(context->attribute_name);
+      context->allowed_attribute_values = _parser_get_allowed_attribute_values(attribute_type);
+
       if (attribute_type == TML_ATTRIBUTE_NULL)
       {
         tml_error_unexpected_attribute_name(err_msg, context->attribute_name, context->source_buffer_idx);
@@ -148,7 +150,14 @@ _parser_actions_space(
         return false;
       }
 
-      if (!ast_add_attribute(*current_node, attribute_type, context->attribute_value))
+      enum ast_attribute_value_e attribute_value = parser_get_attribute_value(context->attribute_value);
+      if ((attribute_value & context->allowed_attribute_values) == 0)
+      {
+        tml_error_unexpected_attribute_value(err_msg, context->attribute_value, context->source_buffer_idx);
+        return false;
+      }
+
+      if (!ast_add_attribute(*current_node, attribute_type, attribute_value))
       {
         tml_error_node_failure(err_msg);
         return false;
@@ -259,13 +268,22 @@ _parser_actions_close_tag(
     }
 
     enum ast_attribute_type_e attribute_type = parser_get_attribute_type(context->attribute_name);
+    context->allowed_attribute_values = _parser_get_allowed_attribute_values(attribute_type);
+
     if (attribute_type == TML_ATTRIBUTE_NULL)
     {
       tml_error_unexpected_attribute_name(err_msg, context->attribute_name, context->source_buffer_idx);
       return false;
     }
 
-    if (!ast_add_attribute(*current_node, attribute_type, context->attribute_value))
+    uint64_t attribute_value = parser_get_attribute_value(context->attribute_value);
+    if ((attribute_value & context->allowed_attribute_values) == 0)
+    {
+      tml_error_unexpected_attribute_value(err_msg, context->attribute_value, context->source_buffer_idx);
+      return false;
+    }
+
+    if (!ast_add_attribute(*current_node, attribute_type, attribute_value))
     {
       tml_error_node_failure(err_msg);
       return false;
