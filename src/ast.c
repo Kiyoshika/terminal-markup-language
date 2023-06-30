@@ -152,29 +152,131 @@ ast_add_body(
   return true;
 }
 
+// these colour IDs must match ncurses (e.g., COLOR_WHITE, etc)
+size_t
+ast_get_colour_id(
+  const enum ast_attribute_value_e value)
+{
+  switch (value)
+  {
+    case TML_ATTRIBUTE_VALUE_BLACK:
+      return 0;
+    case TML_ATTRIBUTE_VALUE_RED:
+      return 1;
+    case TML_ATTRIBUTE_VALUE_GREEN:
+      return 2;
+    case TML_ATTRIBUTE_VALUE_YELLOW:
+      return 3;
+    case TML_ATTRIBUTE_VALUE_BLUE:
+      return 4;
+    case TML_ATTRIBUTE_VALUE_MAGENTA:
+      return 5;
+    case TML_ATTRIBUTE_VALUE_CYAN:
+      return 6;
+    case TML_ATTRIBUTE_VALUE_WHITE:
+      return 7;
+    case TML_ATTRIBUTE_VALUE_TRUE:
+    case TML_ATTRIBUTE_VALUE_FALSE:
+    case TML_ATTRIBUTE_VALUE_NONE:
+      return 0;
+  }
+
+  return 0;
+}
+
 void
 ast_render(
   const struct ast_t* const root)
 {
-  // TODO: finish this by reading node->attributes[i].attribute_value and type
-  // to set different colours and such
+  const size_t n_colours = 8;
 
   // ncurses setup
   initscr();
   if (has_colors())
   {
+    // this initialises every colour combination according
+    // to ncurses' colour IDs (e.g., COLOR_WHITE).
+    //
+    // our attribute colours are mapped to these IDs with
+    // ast_get_colour_id()
     start_color();
-    init_pair(1, COLOR_WHITE, COLOR_BLACK);
+    for (size_t i = 0; i < n_colours; ++i)
+      for (size_t k = 0; k < n_colours; ++k)
+        init_pair(i * n_colours + k, i, k);
   }
-
-  attrset(COLOR_PAIR(1));
 
   size_t current_y = 0;
   size_t current_x = 0;
 
+  // default foreground/background
+  size_t fg = ast_get_colour_id(TML_ATTRIBUTE_VALUE_WHITE);
+  size_t bg = ast_get_colour_id(TML_ATTRIBUTE_VALUE_BLACK);
+
+  // get new fg/bg from root node (if any)
+  for (size_t i = 0; i < root->n_attributes; ++i)
+  {
+    switch (root->attributes[i].type)
+    {
+      case TML_ATTRIBUTE_FOREGROUND:
+        fg = ast_get_colour_id(root->attributes[i].value);
+        break;
+
+      case TML_ATTRIBUTE_BACKGROUND:
+        bg = ast_get_colour_id(root->attributes[i].value);
+        break;
+
+      case TML_ATTRIBUTE_NEWLINE:
+      case TML_ATTRIBUTE_BOLD:
+      case TML_ATTRIBUTE_NULL:
+        break;
+    }
+  }
+
+  // set entire terminal fg/bg determined from root node
+  attron(A_BOLD);
+  wbkgd(stdscr, COLOR_PAIR(fg * n_colours + bg));
+  attroff(A_BOLD);
+
   for (size_t i = 0; i < root->n_children; ++i)
   {
     struct ast_t* child = root->children[i];
+
+    /* setup child attributes before rendering */
+    bool change_colour = false;
+    size_t temp_fg = fg;
+    size_t temp_bg = bg;
+
+    for (size_t attr = 0; attr < child->n_attributes; ++attr)
+    {
+      switch (child->attributes[attr].type)
+      {
+        case TML_ATTRIBUTE_FOREGROUND:
+        {
+          change_colour = true;
+          temp_fg = ast_get_colour_id(child->attributes[attr].value);
+          break;
+        }
+
+        case TML_ATTRIBUTE_BACKGROUND:
+        {
+          change_colour = true;
+          temp_bg = ast_get_colour_id(child->attributes[attr].value);
+          break;
+        }
+
+        case TML_ATTRIBUTE_NEWLINE:
+        case TML_ATTRIBUTE_BOLD:
+        case TML_ATTRIBUTE_NULL:
+          break;
+      }
+    }
+
+    if (change_colour)
+      attrset(COLOR_PAIR(temp_fg * n_colours + temp_bg));
+    else
+      attrset(COLOR_PAIR(fg * n_colours + bg));
+
+    /* render content */
     switch (child->type)
     {
       case TML_NODE_TEXT:

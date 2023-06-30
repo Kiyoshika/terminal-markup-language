@@ -80,6 +80,10 @@ struct ast_t
   size_t attribute_capacity;
 };
 
+size_t
+ast_get_colour_id(
+  const enum ast_attribute_value_e);
+
 struct ast_t*
 ast_create(
   const enum ast_node_type_e type,

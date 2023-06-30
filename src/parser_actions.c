@@ -164,6 +164,7 @@ _parser_actions_space(
       }
 
       _parser_reset_attribute(context);
+      context->state = TML_STATE_PARSING_ATTRIBUTE_NAME;
 
       return true;
     }
