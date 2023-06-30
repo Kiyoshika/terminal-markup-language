@@ -3,6 +3,11 @@ This is a custom renderer to build (somewhat) interactive terminal applications 
 
 See the [TML Specification](tmlspec.md).
 
+## Preview (29 June 2023)
+This is the first preview after text rendering was first implemented:
+
+![image](https://github.com/Kiyoshika/tml/assets/49159969/b92aecd5-94ac-42f7-b8dc-f19938a111b0)
+
 ## Building
 This relies on ncurses for all the UI stuff:
 ```
