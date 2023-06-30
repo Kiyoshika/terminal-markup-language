@@ -1,5 +1,5 @@
 # TML Specification (Terminal Markup Language)
-Version: 0.0.3 - 29 June 2023
+Version: 0.0.2 - 25 June 2023
 
 To see older versions of the spec, see the [TML Spec Archive](tmlspec-archive/)
 
@@ -222,4 +222,3 @@ Some tags that are planned in future iterations, these are not yet documented/fu
 * `<grid>`
 * `<stack>`
 * `<center>`
-* `<group>` (kind of like html's div, can group child nodes together to apply same formatting/styles)
