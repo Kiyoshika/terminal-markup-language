@@ -3,6 +3,25 @@
 #include "parser_actions.h"
 #include "errors.h"
 
+static void
+_remove_trailing_whitespace(
+  char** body)
+{
+  size_t len = strlen(*body);
+  len = len > 0 ? len - 1 : 0;
+  size_t n_whitespace = 0;
+  while (len --> 0)
+  {
+    if (isspace((*body)[len]))
+      n_whitespace++;
+    else
+      break;
+  }
+
+  if (n_whitespace > 0)
+    memset(*body + strlen(*body) - 1 - n_whitespace, 0, n_whitespace);
+}
+
 bool
 _parser_actions_open_tag(
   struct parse_context_t* context,
@@ -25,6 +44,7 @@ _parser_actions_open_tag(
   // e.g.,: <text>hello</text>
   if (context->is_closing_tag && context->state == TML_STATE_PARSING_TAG_BODY)
   {
+    _remove_trailing_whitespace(&context->tag_body);
     ast_add_body(*current_node, context->tag_body);
     _parser_reset_body(context);
   }
