@@ -136,6 +136,12 @@ parser_get_token_type(
       || (current_char >= 'A' && current_char <= 'Z'))
     return TML_TOKEN_TEXT;
 
+  if (isdigit(current_char))
+    return TML_TOKEN_NUMBER;
+
+  if (ispunct(current_char))
+    return TML_TOKEN_PUNCTUATION;
+
   return TML_TOKEN_NULL;
 }
 
@@ -149,7 +155,7 @@ parser_get_next_expected_token(
     case TML_TOKEN_OPEN_TAG:
       return TML_TOKEN_SPACE | TML_TOKEN_TEXT | TML_TOKEN_SLASH;
     case TML_TOKEN_TEXT:
-      return TML_TOKEN_SPACE | TML_TOKEN_TEXT | TML_TOKEN_EQUALS | TML_TOKEN_OPEN_TAG | TML_TOKEN_CLOSE_TAG;
+      return TML_TOKEN_SPACE | TML_TOKEN_TEXT | TML_TOKEN_EQUALS | TML_TOKEN_OPEN_TAG | TML_TOKEN_CLOSE_TAG | TML_TOKEN_NUMBER | TML_TOKEN_PUNCTUATION;
     case TML_TOKEN_CLOSE_TAG:
       return TML_TOKEN_SPACE | TML_TOKEN_OPEN_TAG | TML_TOKEN_TEXT;
     case TML_TOKEN_EQUALS:
@@ -160,6 +166,10 @@ parser_get_next_expected_token(
       return TML_TOKEN_SPACE | TML_TOKEN_NULL;
     case TML_TOKEN_SPACE:
       return ~0u; // any token
+    case TML_TOKEN_NUMBER:
+      return TML_TOKEN_SPACE | TML_TOKEN_TEXT | TML_TOKEN_EQUALS | TML_TOKEN_OPEN_TAG | TML_TOKEN_CLOSE_TAG | TML_TOKEN_NUMBER | TML_TOKEN_PUNCTUATION;
+    case TML_TOKEN_PUNCTUATION:
+      return TML_TOKEN_SPACE | TML_TOKEN_TEXT | TML_TOKEN_EQUALS | TML_TOKEN_OPEN_TAG | TML_TOKEN_CLOSE_TAG | TML_TOKEN_NUMBER | TML_TOKEN_PUNCTUATION;
   }
 
   return TML_TOKEN_NULL;
@@ -180,13 +190,23 @@ parser_perform_token_action(
       return _parser_actions_open_tag(context, current_char, &current_node, err_msg);
       break;
 
+    case TML_TOKEN_NUMBER:
+    case TML_TOKEN_PUNCTUATION:
     case TML_TOKEN_TEXT:
       return _parser_actions_text(context, current_char, &current_node, err_msg);
       break;
 
     case TML_TOKEN_SPACE:
+    {
+      // ignore leading whitespace when parsing body (e.g., if you're heavily tabbed in)
+      if (current_char == ' ' 
+          && context->state == TML_STATE_PARSING_TAG_BODY
+          && strlen(context->tag_body) > 0)
+        return _parser_actions_text(context, current_char, &current_node, err_msg);
+
       return _parser_actions_space(context, current_char, &current_node, err_msg);
       break;
+    }
 
     case TML_TOKEN_EQUALS:
       return _parser_actions_equals(context, current_char, &current_node, err_msg);

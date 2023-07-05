@@ -14,31 +14,35 @@ extern const char* tml_attribute_values[N_ATTRIBUTE_VALUES];
 
 enum tml_token_type_e
 {
-  TML_TOKEN_NULL = 0x00,            // 0000 0000
+  TML_TOKEN_NULL = 0x00,
   // <
-  TML_TOKEN_OPEN_TAG = (1 << 0u),   // 0000 0001
+  TML_TOKEN_OPEN_TAG = (1 << 0u),
   // >
-  TML_TOKEN_CLOSE_TAG = (1 << 1u),  // 0000 0010
+  TML_TOKEN_CLOSE_TAG = (1 << 1u),
   // a-z, A-Z
-  TML_TOKEN_TEXT = (1 << 2u),       // 0000 0100
+  TML_TOKEN_TEXT = (1 << 2u),
   // =
-  TML_TOKEN_EQUALS = (1 << 3u),     // 0000 1000
+  TML_TOKEN_EQUALS = (1 << 3u),
   // /
-  TML_TOKEN_SLASH = (1 << 4u),      // 0001 0000
-  TML_TOKEN_SPACE = (1 << 5u),      // 0010 0000
+  TML_TOKEN_SLASH = (1 << 4u),
+  TML_TOKEN_SPACE = (1 << 5u),
+  // 0-9
+  TML_TOKEN_NUMBER = (1 << 6u),
+  // !, @, #, $, etc.
+  TML_TOKEN_PUNCTUATION = (1 << 7u),
 };
 
 
 
 enum tml_state_e
 {
-  TML_STATE_OPENING_TAG = (1 << 0u),              // 0000 0001
-  TML_STATE_CLOSING_TAG = (1 << 1u),              // 0000 0010
-  TML_STATE_PARSING_TAG_NAME = (1 << 2u),         // 0000 0100
-  TML_STATE_PARSING_ATTRIBUTE_NAME = (1 << 3u),   // 0000 1000
-  TML_STATE_PARSING_ATTRIBUTE_VALUE = (1 << 4u),  // 0001 0000
+  TML_STATE_OPENING_TAG = (1 << 0u),
+  TML_STATE_CLOSING_TAG = (1 << 1u),
+  TML_STATE_PARSING_TAG_NAME = (1 << 2u),
+  TML_STATE_PARSING_ATTRIBUTE_NAME = (1 << 3u),
+  TML_STATE_PARSING_ATTRIBUTE_VALUE = (1 << 4u),
   // <tag>body</tag>
-  TML_STATE_PARSING_TAG_BODY = (1 << 5u),         // 0010 0000
+  TML_STATE_PARSING_TAG_BODY = (1 << 5u),
 };
 
 // manage the entire context of the parser, including an original pointer to the
