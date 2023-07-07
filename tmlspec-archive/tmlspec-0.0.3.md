@@ -1,5 +1,5 @@
 # TML Specification (Terminal Markup Language)
-Version: 0.0.4 - 06 July 2023
+Version: 0.0.3 - 29 June 2023
 
 To see older versions of the spec, see the [TML Spec Archive](tmlspec-archive/)
 
@@ -30,8 +30,6 @@ Where
 * `value1`/`value2` is the value of an attribute. It must only contain lowercase ASCII letters with no spaces or other special characters (e.g., hyphens)
 
 Every tag must have a corresponding closing tag `</tag>`. This determines which nodes to nest into other nodes.
-
-Tags that do not require a body can use the shorthand notation, `<tag/>` which is equivalent to `<tag></tag>`. One example of this is the [space tag](#space).
 
 Attributes and values are tied together with an `=` AND MUST NOT CONTAIN SPACES. For example, this is an illegal attribute definition:
 ```text
@@ -77,7 +75,6 @@ Acceptable colours used in attributes such as `fg`, `bg`, etc.:
 * [New Line](#new-line)
 * [Script](#script)
 * [Text](#text)
-* [Space](#space)
 * [Input](#input)
 * [Planned Future Tags](#planned-future-tags)
 
@@ -132,6 +129,7 @@ hello
 there
 ```
 
+
 ## Script
 **Tag Name:** `<script>`
 
@@ -140,7 +138,7 @@ there
 ## Text
 **Tag Name:** `<text>`
 
-**Description:** Write a line of text. Note that any whitespace in the tag body is consumed (ignored). If you wish to add a space between text nodes on the same line, use the [space tag](#space).
+**Description:** Write a line of text (will automatically append a newline)
 
 **Attributes:**
 * (optional) `fg` - foreground; the colour of the text itself
@@ -149,9 +147,9 @@ there
   * default value: same as parent node
 * (optional) `bold` - if present, make text bold
   * default value: `false `
+* (optional) `id` - An ID that can be referenced in callback functions
 * (optional) `newline` - determine whether or not to add a newline after the text is written
   * default value: `true`
-* (optional) `id` - An ID that can be referenced in callback functions
 
 **Examples:**
 ```
@@ -164,7 +162,6 @@ Write multiple text on the same line by disabling `newline` attribute:
 ```
 <tml>
   <text newline=false>hello</text>
-  <space/>
   <text>there</text>
 
   <text>how are you</text>
@@ -173,23 +170,6 @@ Write multiple text on the same line by disabling `newline` attribute:
 RENDERED AS:
 hello there
 how are you
-```
-
-## Space
-**Tag Name:** `<space>`
-
-**Description:** Inserts a single space character on the current line, commonly used with the [text tag](#text). Note that you can use the short-hand notation with this tag: `<space/>` is equivalent to `<space></space>` since it does not require a body.
-
-**Attributes:** None
-
-**Examples:**
-```text
-<text newline=false>hello</text>
-<space/>
-<text>there</text>
-
-RENDERED AS:
-hello there
 ```
 
 ## Input

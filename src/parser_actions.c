@@ -8,7 +8,6 @@ _remove_trailing_whitespace(
   char** body)
 {
   size_t len = strlen(*body);
-  len = len > 0 ? len - 1 : 0;
   size_t n_whitespace = 0;
   while (len --> 0)
   {
@@ -19,7 +18,7 @@ _remove_trailing_whitespace(
   }
 
   if (n_whitespace > 0)
-    memset(*body + strlen(*body) - 1 - n_whitespace, 0, n_whitespace);
+    memset(*body + strlen(*body) - n_whitespace, 0, n_whitespace);
 }
 
 bool

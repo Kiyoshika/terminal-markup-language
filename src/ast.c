@@ -225,6 +225,7 @@ ast_render(
         bg = ast_get_colour_id(root->attributes[i].value);
         break;
 
+      // no-ops, just here to prevent compiler warnings
       case TML_ATTRIBUTE_NEWLINE:
       case TML_ATTRIBUTE_BOLD:
       case TML_ATTRIBUTE_NULL:
@@ -236,6 +237,9 @@ ast_render(
   attron(A_BOLD);
   wbkgd(stdscr, COLOR_PAIR(fg * n_colours + bg));
   attroff(A_BOLD);
+
+  bool is_bold = false;
+  bool is_newline = true;
 
   for (size_t i = 0; i < root->n_children; ++i)
   {
@@ -265,7 +269,11 @@ ast_render(
         }
 
         case TML_ATTRIBUTE_NEWLINE:
+          is_newline = child->attributes[attr].value == TML_ATTRIBUTE_VALUE_TRUE;
+          break;
         case TML_ATTRIBUTE_BOLD:
+         is_bold = child->attributes[attr].value == TML_ATTRIBUTE_VALUE_TRUE;
+         break;
         case TML_ATTRIBUTE_NULL:
           break;
       }
@@ -282,8 +290,17 @@ ast_render(
       case TML_NODE_TEXT:
       {
         move(current_y, current_x);
+        if (is_bold)
+          attron(A_BOLD);
         printw("%s", child->body);
-        current_y++;
+        attroff(A_BOLD);
+        if (is_newline)
+        {
+          current_y++;
+          current_x = 0;
+        }
+        else
+          current_x += strlen(child->body);
         break;
       }
 
@@ -291,6 +308,10 @@ ast_render(
       case TML_NODE_ROOT:
         break;
     }
+
+    // reset to defaults
+    is_bold = false;
+    is_newline = true;
   }
   getch();
   endwin();

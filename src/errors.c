@@ -88,5 +88,5 @@ tml_error_unexpected_attribute_value(
   const char* const attribute_value,
   const size_t token_position)
 {
-  sprintf(err_msg, "Unexpected attribute valube '%s' at position %zu.\n", attribute_value, token_position);
+  sprintf(err_msg, "Unexpected attribute value '%s' at position %zu.\n", attribute_value, token_position);
 }
