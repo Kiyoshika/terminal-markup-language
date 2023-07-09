@@ -3,10 +3,42 @@ This is a custom renderer to build (somewhat) interactive terminal applications 
 
 See the [TML Specification](tmlspec.md).
 
-## Preview (29 June 2023)
-This is the first preview after text rendering was first implemented:
+## Preview (09 July 2023)
+Below is a preview of rendering some text with different colours/attributes:
 
-![image](https://github.com/Kiyoshika/tml/assets/49159969/b92aecd5-94ac-42f7-b8dc-f19938a111b0)
+![Capture](https://github.com/Kiyoshika/tml/assets/49159969/8764c835-2ffa-44bd-a9af-db8b69964e25)
+
+Which was rendered with the following tml script:
+```text
+<tml
+  bg=blue
+  fg=white>
+
+  <text bold=true>
+    I'm some text
+  </text>
+
+  <text
+    fg=red
+    newline=false>
+    I'm some other text!!
+  </text>
+
+  <text
+    bg=black
+    fg=yellow
+    #nuggets$$&
+  </text>
+
+  <text/>
+  
+  <text newline=false>this</text>
+  <space/>
+  <text newline=false bold=true>word</text>
+  <space/>
+  <text>is bold.</text>
+</tml>
+```
 
 ## Building
 This relies on ncurses for all the UI stuff:
