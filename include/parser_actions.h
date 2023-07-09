@@ -48,4 +48,11 @@ _parser_actions_close_tag(
   struct ast_t** current_node,
   char* err_msg);
 
+bool
+_parser_actions_slash(
+  struct parse_context_t* context,
+  const char current_char,
+  struct ast_t** current_node,
+  char* err_msg);
+
 #endif

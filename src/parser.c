@@ -9,7 +9,8 @@
 // ast_node_type_e in ast.h
 const char* tml_tag_names[N_TOKEN_TYPES] = {
   "tml",
-  "text"
+  "text",
+  "space"
 };
 
 // IMPORTANT: this must be ordered the same as
@@ -155,13 +156,13 @@ parser_get_next_expected_token(
     case TML_TOKEN_OPEN_TAG:
       return TML_TOKEN_SPACE | TML_TOKEN_TEXT | TML_TOKEN_SLASH;
     case TML_TOKEN_TEXT:
-      return TML_TOKEN_SPACE | TML_TOKEN_TEXT | TML_TOKEN_EQUALS | TML_TOKEN_OPEN_TAG | TML_TOKEN_CLOSE_TAG | TML_TOKEN_NUMBER | TML_TOKEN_PUNCTUATION;
+      return TML_TOKEN_SPACE | TML_TOKEN_TEXT | TML_TOKEN_EQUALS | TML_TOKEN_OPEN_TAG | TML_TOKEN_CLOSE_TAG | TML_TOKEN_NUMBER | TML_TOKEN_PUNCTUATION | TML_TOKEN_SLASH;
     case TML_TOKEN_CLOSE_TAG:
       return TML_TOKEN_SPACE | TML_TOKEN_OPEN_TAG | TML_TOKEN_TEXT;
     case TML_TOKEN_EQUALS:
       return TML_TOKEN_SPACE | TML_TOKEN_TEXT;
     case TML_TOKEN_SLASH:
-      return TML_TOKEN_SPACE | TML_TOKEN_TEXT;
+      return TML_TOKEN_SPACE | TML_TOKEN_TEXT | TML_TOKEN_CLOSE_TAG;
     case TML_TOKEN_NULL:
       return TML_TOKEN_SPACE | TML_TOKEN_NULL;
     case TML_TOKEN_SPACE:
@@ -220,8 +221,9 @@ parser_perform_token_action(
     case TML_TOKEN_NULL:
       break;
 
-    // no-op (handled as a special case in TML_TOKEN_OPEN_TAG)
+    // used for short-hand tokens, e.g., <space/>
     case TML_TOKEN_SLASH:
+      return _parser_actions_slash(context, current_char, &current_node, err_msg);
       break;
   }
 

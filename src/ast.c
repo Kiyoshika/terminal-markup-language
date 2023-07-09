@@ -21,7 +21,7 @@ ast_create(
     case TML_NODE_ROOT:
     {
       node->contains_body = false;
-      node->allowed_children_nodes = TML_NODE_TEXT;
+      node->allowed_children_nodes = TML_NODE_TEXT | TML_NODE_SPACE;
       break;
     }
     case TML_NODE_TEXT:
@@ -29,6 +29,11 @@ ast_create(
       node->contains_body = true;
       node->allowed_children_nodes = TML_NODE_NONE;
       break;
+    }
+    case TML_NODE_SPACE:
+    {
+      node->contains_body = false;
+      node->allowed_children_nodes = TML_NODE_NONE;
     }
     case TML_NODE_NONE:
       break;
@@ -292,7 +297,9 @@ ast_render(
         move(current_y, current_x);
         if (is_bold)
           attron(A_BOLD);
-        printw("%s", child->body);
+        // if length is 0, print nothing, otherwise it prints "(null)"
+        if (child->body && strlen(child->body) > 0)
+          printw("%s", child->body);
         attroff(A_BOLD);
         if (is_newline)
         {
@@ -301,6 +308,14 @@ ast_render(
         }
         else
           current_x += strlen(child->body);
+        break;
+      }
+
+      case TML_NODE_SPACE:
+      {
+        move(current_y, current_x);
+        printw(" ");
+        current_x++;
         break;
       }
 

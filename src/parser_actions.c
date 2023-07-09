@@ -21,6 +21,28 @@ _remove_trailing_whitespace(
     memset(*body + strlen(*body) - n_whitespace, 0, n_whitespace);
 }
 
+static bool 
+_close_and_insert_tag(
+  struct parse_context_t* context,
+  struct ast_t** current_node,
+  char* err_msg,
+  bool ignore_parent)
+{
+  if (!ignore_parent && parser_get_node_type(context->tag_name) != context->reference_node->type)
+  {
+    tml_error_close_tag_not_matching_parent(err_msg, context->tag_name, context->source_buffer_idx);
+    return false;
+  }
+
+  if (context->reference_node->parent)
+    ast_add_child(context->reference_node->parent, *current_node);
+  context->is_closing_tag = false;
+  context->state = TML_STATE_OPENING_TAG;
+  context->reference_node = context->reference_node->parent;
+  _parser_reset_tag_state(context);
+  return true;
+}
+
 bool
 _parser_actions_open_tag(
   struct parse_context_t* context,
@@ -46,9 +68,12 @@ _parser_actions_open_tag(
     _remove_trailing_whitespace(&context->tag_body);
     ast_add_body(*current_node, context->tag_body);
     _parser_reset_body(context);
+    // skip past slash token
+    context->source_buffer_idx++;
   }
 
   context->state = TML_STATE_PARSING_TAG_NAME;
+
   return true;
 }
 
@@ -232,21 +257,7 @@ _parser_actions_close_tag(
 
   // checking for </tag>
   if (context->is_closing_tag)
-  {
-    if (parser_get_node_type(context->tag_name) != context->reference_node->type)
-    {
-      tml_error_close_tag_not_matching_parent(err_msg, context->tag_name, context->source_buffer_idx);
-      return false;
-    }
-
-    if (context->reference_node->parent)
-      ast_add_child(context->reference_node->parent, *current_node);
-    context->is_closing_tag = false;
-    context->state = TML_STATE_OPENING_TAG;
-    context->reference_node = context->reference_node->parent;
-    _parser_reset_tag_state(context);
-    return true;
-  }
+    return _close_and_insert_tag(context, current_node, err_msg, false);
 
   // if we close a tag while parsing name
   if (context->state == TML_STATE_PARSING_TAG_NAME)
@@ -338,5 +349,31 @@ _parser_actions_close_tag(
     context->state = TML_STATE_OPENING_TAG;
 
   _parser_reset_tag_state(context);
+  return true;
+}
+
+bool
+_parser_actions_slash(
+  struct parse_context_t* context,
+  const char current_char,
+  struct ast_t** current_node,
+  char* err_msg)
+{
+  (void)current_char;
+
+  // no-op
+  if (context->next_token != TML_TOKEN_CLOSE_TAG)
+    return true;
+
+  enum ast_node_type_e node_type = parser_get_node_type(context->tag_name);
+  *current_node = ast_create(node_type, context->reference_node);
+  context->reference_node = *current_node;
+
+  if (!_close_and_insert_tag(context, current_node, err_msg, true))
+    return false;
+
+  // skip past close tag
+  context->source_buffer_idx++;
+  context->state = TML_STATE_OPENING_TAG;
   return true;
 }
