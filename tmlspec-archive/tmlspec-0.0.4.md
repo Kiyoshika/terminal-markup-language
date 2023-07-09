@@ -1,5 +1,5 @@
 # TML Specification (Terminal Markup Language)
-Version: 0.0.5 - 09 July 2023
+Version: 0.0.4 - 06 July 2023
 
 To see older versions of the spec, see the [TML Spec Archive](tmlspec-archive/)
 
@@ -74,6 +74,7 @@ Acceptable colours used in attributes such as `fg`, `bg`, etc.:
 # Tag Reference
 
 * [Root](#root)
+* [New Line](#new-line)
 * [Script](#script)
 * [Text](#text)
 * [Space](#space)
@@ -109,6 +110,28 @@ This creates a white terminal where all nodes will have a red foreground by defa
 </tml>
 ```
 
+## New Line
+**Tag Name:** `<newline>`
+
+**Description:** Adds a new line during rendering.
+
+**Attributes:** None
+
+**Examples:**
+This writes some text separated by an extra new line. Note that `<text>` by default already creates a new line.
+```
+<tml>
+  <text>hello</text>
+  <newline>
+  <text>there</text>
+</tml>
+
+RENDERED AS:
+hello
+
+there
+```
+
 ## Script
 **Tag Name:** `<script>`
 
@@ -129,8 +152,6 @@ This creates a white terminal where all nodes will have a red foreground by defa
 * (optional) `newline` - determine whether or not to add a newline after the text is written
   * default value: `true`
 * (optional) `id` - An ID that can be referenced in callback functions
-
-NOTE: you can use this tag as a newline by using the shorthand `<text/>` which only prints a newline
 
 **Examples:**
 ```
@@ -188,14 +209,12 @@ hello there
   * default value: `25`
 
 **Examples:**
-
-NOTE: as of the version of this spec, the scripting language is not yet designed; below is only a rough prototype of what it *might* look like.
 ```
 <tml>
   <text>First Name:</text>
   <text id=firstNameId></text>
 
-  <text/>
+  <newline>
 
   <text>Last Name:</text>
   <text id=lastNameId></text>
