@@ -21,7 +21,7 @@ ast_create(
     case TML_NODE_ROOT:
     {
       node->contains_body = false;
-      node->allowed_children_nodes = TML_NODE_TEXT | TML_NODE_SPACE;
+      node->allowed_children_nodes = TML_NODE_TEXT | TML_NODE_SPACE | TML_NODE_INPUT;
       break;
     }
     case TML_NODE_TEXT:
@@ -34,6 +34,13 @@ ast_create(
     {
       node->contains_body = false;
       node->allowed_children_nodes = TML_NODE_NONE;
+      break;
+    }
+    case TML_NODE_INPUT:
+    {
+      node->contains_body = true;
+      node->allowed_children_nodes = TML_NODE_NONE;
+      break;
     }
     case TML_NODE_NONE:
       break;
@@ -64,11 +71,13 @@ bool
 ast_add_attribute(
   struct ast_t* node,
   const enum ast_attribute_type_e type,
-  const enum ast_attribute_value_e value)
+  const enum ast_attribute_value_e value,
+  const char* custom_value)
 {
   struct ast_attribute_pair_t attribute = {
     .type = type,
-    .value = value
+    .value = value,
+    .custom_value = custom_value
   };
 
   memcpy(&node->attributes[node->n_attributes++], &attribute, sizeof(attribute));
@@ -183,6 +192,7 @@ ast_get_colour_id(
     case TML_ATTRIBUTE_VALUE_TRUE:
     case TML_ATTRIBUTE_VALUE_FALSE:
     case TML_ATTRIBUTE_VALUE_NONE:
+    case TML_ATTRIBUTE_VALUE_CUSTOM:
       return 0;
   }
 
@@ -234,6 +244,9 @@ ast_render(
       case TML_ATTRIBUTE_NEWLINE:
       case TML_ATTRIBUTE_BOLD:
       case TML_ATTRIBUTE_NULL:
+      case TML_ATTRIBUTE_MINLENGTH:
+      case TML_ATTRIBUTE_MAXLENGTH:
+      case TML_ATTRIBUTE_CALLBACK:
         break;
     }
   }

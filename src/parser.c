@@ -10,7 +10,8 @@
 const char* tml_tag_names[N_TOKEN_TYPES] = {
   "tml",
   "text",
-  "space"
+  "space",
+  "input"
 };
 
 // IMPORTANT: this must be ordered the same as
@@ -19,7 +20,10 @@ const char* tml_attribute_names[N_ATTRIBUTE_TYPES] = {
   "fg",
   "bg",
   "newline",
-  "bold"
+  "bold",
+  "callback",
+  "minLength",
+  "maxLength"
 };
 
 // IMPORTANT: this must be ordered the same as
@@ -34,7 +38,8 @@ const char* tml_attribute_values[N_ATTRIBUTE_VALUES] = {
   "green",
   "magenta",
   "true",
-  "false"
+  "false",
+  "custom"
 };
 
 bool

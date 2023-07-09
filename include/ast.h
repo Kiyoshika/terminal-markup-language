@@ -9,9 +9,9 @@
 
 #include "colours.h"
 
-#define N_TOKEN_TYPES 3
-#define N_ATTRIBUTE_TYPES 4
-#define N_ATTRIBUTE_VALUES 10
+#define N_TOKEN_TYPES 4
+#define N_ATTRIBUTE_TYPES 7
+#define N_ATTRIBUTE_VALUES 11
 #define TML_TAG_NAME_LEN 21
 #define TML_ATTRIBUTE_NAME_LEN 21
 #define TML_ATTRIBUTE_VALUE_LEN 21
@@ -21,7 +21,8 @@ enum ast_node_type_e
   TML_NODE_NONE = 0u,
   TML_NODE_ROOT = (1 << 0u),
   TML_NODE_TEXT = (1 << 1u),
-  TML_NODE_SPACE = (1 << 2u)
+  TML_NODE_SPACE = (1 << 2u),
+  TML_NODE_INPUT = (1 << 3u),
 };
 
 enum ast_attribute_type_e
@@ -35,6 +36,12 @@ enum ast_attribute_type_e
   TML_ATTRIBUTE_NEWLINE = (1 << 2u),
   // bold=
   TML_ATTRIBUTE_BOLD = (1 << 3u),
+  // callback=
+  TML_ATTRIBUTE_CALLBACK = (1 << 4u),
+  // minLength=
+  TML_ATTRIBUTE_MINLENGTH = (1 << 5u),
+  // maxLength=
+  TML_ATTRIBUTE_MAXLENGTH = (1 << 6u),
 };
 
 enum ast_attribute_value_e
@@ -52,12 +59,15 @@ enum ast_attribute_value_e
   // booleans
   TML_ATTRIBUTE_VALUE_TRUE = (1 << 8u),
   TML_ATTRIBUTE_VALUE_FALSE = (1 << 9u),
+  // custom value (e.g., id or callback text)
+  TML_ATTRIBUTE_VALUE_CUSTOM = (1 << 10u),
 };
 
 struct ast_attribute_pair_t
 {
   const enum ast_attribute_type_e type;
   const enum ast_attribute_value_e value;
+  const char* custom_value;
 };
 
 struct ast_t
@@ -94,7 +104,8 @@ bool
 ast_add_attribute(
   struct ast_t* node,
   const enum ast_attribute_type_e type,
-  const enum ast_attribute_value_e value);
+  const enum ast_attribute_value_e value,
+  const char* custom_value);
 
 bool
 ast_add_child(
