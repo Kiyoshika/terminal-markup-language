@@ -28,7 +28,7 @@ _close_and_insert_tag(
   char* err_msg,
   bool ignore_parent)
 {
-  if (!ignore_parent && parser_get_node_type(context->tag_name) != context->reference_node->type)
+  if (!ignore_parent && parser_get_node_type(context) != context->reference_node->type)
   {
     tml_error_close_tag_not_matching_parent(err_msg, context->tag_name, context->source_buffer_idx);
     return false;
@@ -56,7 +56,7 @@ _add_tag_name(
     return false;
   }
 
-  enum ast_node_type_e node_type = parser_get_node_type(context->tag_name);
+  enum ast_node_type_e node_type = parser_get_node_type(context);
   if (node_type == TML_NODE_NONE)
   {
     tml_error_unexpected_tag_name(err_msg, context->tag_name, context->source_buffer_idx);
@@ -91,7 +91,7 @@ _add_tag_value(
     return false;
   }
 
-  enum ast_attribute_type_e attribute_type = parser_get_attribute_type(context->attribute_name);
+  enum ast_attribute_type_e attribute_type = parser_get_attribute_type(context);
   context->allowed_attribute_values = _parser_get_allowed_attribute_values(attribute_type);
 
   if (attribute_type == TML_ATTRIBUTE_NULL)
@@ -100,7 +100,7 @@ _add_tag_value(
     return false;
   }
 
-  uint64_t attribute_value = parser_get_attribute_value(context->attribute_value);
+  uint64_t attribute_value = parser_get_attribute_value(context);
   if ((attribute_value & context->allowed_attribute_values) == 0)
   {
     tml_error_unexpected_attribute_value(err_msg, context->attribute_value, context->source_buffer_idx);
@@ -223,7 +223,7 @@ _parser_actions_space(
     {
       if (context->tag_name_len > 0)
       {
-        enum ast_node_type_e node_type = parser_get_node_type(context->tag_name);
+        enum ast_node_type_e node_type = parser_get_node_type(context);
         if (node_type == TML_NODE_NONE)
         {
           tml_error_unexpected_tag_name(err_msg, context->tag_name, context->source_buffer_idx);
@@ -252,7 +252,7 @@ _parser_actions_space(
 
     case TML_STATE_PARSING_ATTRIBUTE_VALUE:
     {
-      enum ast_attribute_type_e attribute_type = parser_get_attribute_type(context->attribute_name);
+      enum ast_attribute_type_e attribute_type = parser_get_attribute_type(context);
       context->allowed_attribute_values = _parser_get_allowed_attribute_values(attribute_type);
 
       if (attribute_type == TML_ATTRIBUTE_NULL)
@@ -267,7 +267,7 @@ _parser_actions_space(
         return false;
       }
 
-      enum ast_attribute_value_e attribute_value = parser_get_attribute_value(context->attribute_value);
+      enum ast_attribute_value_e attribute_value = parser_get_attribute_value(context);
       if ((attribute_value & context->allowed_attribute_values) == 0)
       {
         tml_error_unexpected_attribute_value(err_msg, context->attribute_value, context->source_buffer_idx);
@@ -388,7 +388,7 @@ _parser_actions_slash(
   if (context->next_token != TML_TOKEN_CLOSE_TAG)
     return true;
 
-  enum ast_node_type_e node_type = parser_get_node_type(context->tag_name);
+  enum ast_node_type_e node_type = parser_get_node_type(context);
   
   // <tag/> versus <tag /> or <tag attr=val/> (if the tag is already created, don't create a new one)
   if (context->reference_node->type != node_type)

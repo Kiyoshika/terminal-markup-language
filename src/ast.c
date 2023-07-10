@@ -332,6 +332,20 @@ ast_render(
         break;
       }
 
+      case TML_NODE_INPUT:
+      {
+        move(current_y, current_x);
+        printw("[");
+        current_x++;
+        if (child->body && strlen(child->body) > 0)
+        {
+          printw("%s", child->body);
+          current_x += strlen(child->body);
+        }
+        printw("]");
+        break;
+      }
+
       case TML_NODE_NONE:
       case TML_NODE_ROOT:
         break;
