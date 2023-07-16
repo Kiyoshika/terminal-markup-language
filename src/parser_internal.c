@@ -114,6 +114,8 @@ _parser_get_allowed_attribute_values(
 
     case TML_ATTRIBUTE_NEWLINE:
     case TML_ATTRIBUTE_BOLD:
+    case TML_ATTRIBUTE_PASSWORD:
+    case TML_ATTRIBUTE_MULTILINE:
     {
       return TML_ATTRIBUTE_VALUE_TRUE
            | TML_ATTRIBUTE_VALUE_FALSE;

@@ -1,4 +1,5 @@
 #include "ast.h"
+#include "ast_internal.h"
 #include "iarray.h"
 #include <ctype.h>
 
@@ -78,6 +79,60 @@ ast_create(
   }
 
   return node;
+}
+
+void
+ast_init_attributes(
+  struct ast_attributes_t* const attributes)
+{
+  attributes->fg = 0;
+  attributes->bg = 0;
+  attributes->change_colour = false;
+  attributes->is_bold = false;
+  attributes->is_newline = true;
+  attributes->is_password = false;
+  attributes->is_multiline = false;
+}
+
+void
+ast_set_attributes_from_node(
+  const struct ast_t* const node,
+  struct ast_attributes_t* const attributes)
+{
+  for (size_t attr = 0; attr < node->n_attributes; ++attr)
+  {
+    switch (node->attributes[attr].type)
+    {
+      case TML_ATTRIBUTE_FOREGROUND:
+      {
+        attributes->change_colour = true;
+        attributes->fg = ast_get_colour_id(node->attributes[attr].value);
+        break;
+      }
+
+      case TML_ATTRIBUTE_BACKGROUND:
+      {
+        attributes->change_colour = true;
+        attributes->bg = ast_get_colour_id(node->attributes[attr].value);
+        break;
+      }
+
+      case TML_ATTRIBUTE_NEWLINE:
+        attributes->is_newline = node->attributes[attr].value == TML_ATTRIBUTE_VALUE_TRUE;
+        break;
+      case TML_ATTRIBUTE_BOLD:
+       attributes->is_bold = node->attributes[attr].value == TML_ATTRIBUTE_VALUE_TRUE;
+       break;
+      case TML_ATTRIBUTE_PASSWORD:
+        attributes->is_password = node->attributes[attr].value == TML_ATTRIBUTE_VALUE_TRUE;
+        break;
+      case TML_ATTRIBUTE_MULTILINE:
+        attributes->is_multiline = node->attributes[attr].value == TML_ATTRIBUTE_VALUE_TRUE;
+        break;
+      case TML_ATTRIBUTE_NULL:
+        break;
+    }
+  }
 }
 
 bool
@@ -221,7 +276,6 @@ ast_get_colour_id(
   return 0;
 }
 
-/* TODO: this function is growing very large and can use some cleanup */
 void
 ast_draw(
   const struct ast_t* const root,
@@ -270,6 +324,8 @@ ast_draw(
       case TML_ATTRIBUTE_MINLENGTH:
       case TML_ATTRIBUTE_MAXLENGTH:
       case TML_ATTRIBUTE_CALLBACK:
+      case TML_ATTRIBUTE_PASSWORD:
+      case TML_ATTRIBUTE_MULTILINE:
         break;
     }
   }
@@ -279,49 +335,17 @@ ast_draw(
   wbkgd(stdscr, COLOR_PAIR(fg * n_colours + bg));
   attroff(A_BOLD);
 
-  bool is_bold = false;
-  bool is_newline = true;
-
   for (size_t i = 0; i < root->n_children; ++i)
   {
     struct ast_t* child = root->children[i];
 
     /* setup child attributes before rendering */
-    bool change_colour = false;
-    size_t temp_fg = fg;
-    size_t temp_bg = bg;
+    struct ast_attributes_t attributes;
+    ast_init_attributes(&attributes);
+    ast_set_attributes_from_node(child, &attributes);
 
-    for (size_t attr = 0; attr < child->n_attributes; ++attr)
-    {
-      switch (child->attributes[attr].type)
-      {
-        case TML_ATTRIBUTE_FOREGROUND:
-        {
-          change_colour = true;
-          temp_fg = ast_get_colour_id(child->attributes[attr].value);
-          break;
-        }
-
-        case TML_ATTRIBUTE_BACKGROUND:
-        {
-          change_colour = true;
-          temp_bg = ast_get_colour_id(child->attributes[attr].value);
-          break;
-        }
-
-        case TML_ATTRIBUTE_NEWLINE:
-          is_newline = child->attributes[attr].value == TML_ATTRIBUTE_VALUE_TRUE;
-          break;
-        case TML_ATTRIBUTE_BOLD:
-         is_bold = child->attributes[attr].value == TML_ATTRIBUTE_VALUE_TRUE;
-         break;
-        case TML_ATTRIBUTE_NULL:
-          break;
-      }
-    }
-
-    if (change_colour)
-      attrset(COLOR_PAIR(temp_fg * n_colours + temp_bg));
+    if (attributes.change_colour)
+      attrset(COLOR_PAIR(attributes.fg * n_colours + attributes.bg));
     else
       attrset(COLOR_PAIR(fg * n_colours + bg));
 
@@ -329,66 +353,21 @@ ast_draw(
     switch (child->type)
     {
       case TML_NODE_TEXT:
-      {
-        move(current_y, current_x);
-        if (is_bold)
-          attron(A_BOLD);
-        // if length is 0, print nothing, otherwise it prints "(null)"
-        if (child->body.length > 0)
-          printw("%s", child->body.content);
-        attroff(A_BOLD);
-        if (is_newline)
-        {
-          current_y++;
-          current_x = 0;
-        }
-        else
-          current_x += child->body.length;
+        ast_render_text(child, &attributes, interactive_items, &current_x, &current_y);
         break;
-      }
 
       case TML_NODE_SPACE:
-      {
-        move(current_y, current_x);
-        printw(" ");
-        current_x++;
+        ast_render_space(child, &attributes, interactive_items, &current_x, &current_y);
         break;
-      }
-
+      
       case TML_NODE_INPUT:
-      {
-        size_t body_len = 0;
-        if (child->contains_body)
-          body_len = child->body.length;
-
-        iarray_add(interactive_items, child, current_x, current_y, body_len + 1);
-        move(current_y, current_x);
-        printw("[");
-        current_x++;
-        if (body_len > 0)
-        {
-          printw("%s", child->body.content);
-          current_x += body_len; 
-        }
-        printw("]");
-        current_x++;
-
-        if (is_newline)
-        {
-          current_y++;
-          current_x = 0;
-        }
+        ast_render_input(child, &attributes, interactive_items, &current_x, &current_y);
         break;
-      }
-
+      
       case TML_NODE_NONE:
       case TML_NODE_ROOT:
         break;
     }
-
-    // reset to defaults
-    is_bold = false;
-    is_newline = true;
   }
 }
 
@@ -500,7 +479,7 @@ ast_render(
     {
       if (clicked_item 
           && clicked_item->node->type == TML_NODE_INPUT
-          && (isalnum(current_key) || ispunct(current_key) || isdigit(current_key) || current_key == ' '))
+          && (isalnum(current_key) || ispunct(current_key) || isdigit(current_key) || current_key == ' ' || current_key == '\n'))
       {
         const size_t position = mouse_x - clicked_item->x;
         ast_insert_char_to_body(clicked_item->node, (const char)current_key, position);

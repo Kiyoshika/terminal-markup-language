@@ -2,6 +2,7 @@ add_library(tml
   filesystem.c
   colours.c
   ast.c
+  ast_internal.c
   parser.c
   parser_internal.c
   parser_actions.c

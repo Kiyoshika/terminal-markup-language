@@ -10,7 +10,7 @@
 #include "colours.h"
 
 #define N_TOKEN_TYPES 4
-#define N_ATTRIBUTE_TYPES 7
+#define N_ATTRIBUTE_TYPES 9
 #define N_ATTRIBUTE_VALUES 11
 #define TML_TAG_NAME_LEN 21
 #define TML_ATTRIBUTE_NAME_LEN 21
@@ -31,9 +31,9 @@ enum ast_node_type_e
 enum ast_attribute_type_e
 {
   TML_ATTRIBUTE_NULL = 0u,
-  // fg=...
+  // fg=
   TML_ATTRIBUTE_FOREGROUND = (1 << 0u),
-  // bg=...
+  // bg=
   TML_ATTRIBUTE_BACKGROUND = (1 << 1u),
   // newline=
   TML_ATTRIBUTE_NEWLINE = (1 << 2u),
@@ -45,6 +45,10 @@ enum ast_attribute_type_e
   TML_ATTRIBUTE_MINLENGTH = (1 << 5u),
   // maxLength=
   TML_ATTRIBUTE_MAXLENGTH = (1 << 6u),
+  // password=
+  TML_ATTRIBUTE_PASSWORD = (1 << 7u),
+  // multiline=
+  TML_ATTRIBUTE_MULTILINE = (1 << 8u),
 };
 
 enum ast_attribute_value_e
@@ -80,6 +84,18 @@ struct ast_string_body_t
   size_t capacity;
 };
 
+// struct used when rendering/drawing ast
+struct ast_attributes_t
+{
+  bool change_colour;
+  size_t fg;
+  size_t bg;
+  bool is_newline;
+  bool is_bold;
+  bool is_password;
+  bool is_multiline;
+};
+
 struct ast_t
 {
   enum ast_node_type_e type;
@@ -109,6 +125,15 @@ struct ast_t*
 ast_create(
   const enum ast_node_type_e type,
   struct ast_t* parent);
+
+void
+ast_init_attributes(
+  struct ast_attributes_t* const attributes);
+
+void
+ast_set_attributes_from_node(
+  const struct ast_t* const node,
+  struct ast_attributes_t* const attributes);
 
 bool
 ast_add_attribute(

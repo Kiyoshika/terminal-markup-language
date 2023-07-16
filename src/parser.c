@@ -23,7 +23,9 @@ const char* tml_attribute_names[N_ATTRIBUTE_TYPES] = {
   "bold",
   "callback",
   "minLength",
-  "maxLength"
+  "maxLength",
+  "password",
+  "multiline"
 };
 
 // IMPORTANT: this must be ordered the same as
