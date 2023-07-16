@@ -1,11 +1,9 @@
 # TML Specification (Terminal Markup Language)
-Version: 0.0.6 - 16 July 2023
+Version: 0.0.5 - 09 July 2023
 
 To see older versions of the spec, see the [TML Spec Archive](tmlspec-archive/)
 
-The TML file will be rendered in the terminal similar to how HTML is rendered in a web page. 
-
-Interactable items (input, buttons, etc.) can be clicked on with the mouse.
+The TML file will be rendered in the terminal similar to how HTML is rendered in a web page. Any navigatable items (e.g., buttons, user input, etc.) can be navigated with using default vim motions (h, j, k, l) and space/enter to interact.
 
 ## Overview
 This is a markup language similar to HTML to create elements to be rendered onto a terminal screen.
@@ -176,7 +174,7 @@ hello there
 ## Input
 **Tag Name:** `<input>`
 
-**Description:** Get input from a user and pass it to a callback. Click anywhere in the input box to start typing.
+**Description:** Get input from a user and pass it to a callback. Blocks input (making the renderer wait until user submits.) If text box is highlighted, user can press space to start typing and enter to submit.
 
 **Attributes:**
 * (required) `callback` - function name to call when user submits. callback function must take a single `string` argument
@@ -188,8 +186,6 @@ hello there
   * default value: `1`
 * (optional) `maxLength` - max length of the buffer; prevents user from inputting more characters
   * default value: `25`
-* (optional) `password` - mask the input with `*` used for password or secret inputs
-  * default value: `false`
 
 **Examples:**
 
