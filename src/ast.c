@@ -200,13 +200,11 @@ ast_get_colour_id(
 }
 
 void
-ast_render(
+ast_draw(
   const struct ast_t* const root)
 {
   const size_t n_colours = 8;
 
-  // ncurses setup
-  initscr();
   if (has_colors())
   {
     // this initialises every colour combination according
@@ -355,6 +353,36 @@ ast_render(
     is_bold = false;
     is_newline = true;
   }
-  getch();
+}
+
+void
+ast_render(
+  const struct ast_t* const root)
+{
+  const int KEY_ESC = 27; // also technically ALT but we don't need that key
+  int current_key = 0;
+  mmask_t old;
+
+  initscr ();
+  clear();
+  noecho ();
+  cbreak ();
+  keypad (stdscr, TRUE);
+  mousemask (ALL_MOUSE_EVENTS | REPORT_MOUSE_POSITION, &old);
+
+  ast_draw(root);
+
+  while ((current_key = getch ()) != KEY_ESC)
+  {
+    if (current_key == KEY_MOUSE)
+    {
+       MEVENT event;
+       getmouse(&event);
+       move(event.y, event.x);
+       refresh();
+    }
+    else
+      ast_draw(root);
+  }
   endwin();
 }

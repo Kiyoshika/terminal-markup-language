@@ -122,6 +122,10 @@ ast_free(
   struct ast_t** root);
 
 void
+ast_draw(
+  const struct ast_t* const root);
+
+void
 ast_render(
   const struct ast_t* const root);
 
