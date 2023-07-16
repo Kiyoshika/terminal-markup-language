@@ -6,7 +6,7 @@ See the [TML Specification](tmlspec.md).
 ## Preview (16 July 2023)
 This is a sample preview with a regular & password input box and some basic formatting.
 
-![image](https://github.com/Kiyoshika/tml/assets/49159969/b92aecd5-94ac-42f7-b8dc-f19938a111b0)
+![loginsample](https://github.com/Kiyoshika/tml/assets/49159969/597b0b22-7a0f-4ca9-80c4-28f1fe816761)
 
 Rendered from the following TML:
 ```text
