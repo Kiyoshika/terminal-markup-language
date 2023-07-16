@@ -44,8 +44,15 @@ iarray_add(
 struct iarray_item_t*
 iarray_find(
   const struct iarray_t* const array,
-  size_t x,
-  size_t y);
+  const size_t x,
+  const size_t y);
+
+void
+iarray_shift_x_right(
+  struct iarray_t* const array,
+  const size_t clicked_item_x,
+  const size_t y,
+  const size_t n);
 
 void
 iarray_free(

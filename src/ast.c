@@ -18,10 +18,16 @@ ast_create(
   node->type = type; 
 
   node->body = (struct ast_string_body_t){
-    .content = NULL,
+    .content = calloc(10, sizeof(char)),
     .length = 0,
-    .capacity = 0
+    .capacity = 10
   };
+
+  if (!node->body.content)
+  {
+    free(node);
+    return NULL;
+  }
 
   switch (node->type)
   {
@@ -124,11 +130,8 @@ ast_free(
   free((*root)->attributes);
   (*root)->attributes = NULL;
 
-  if ((*root)->contains_body)
-  {
-    free((*root)->body.content);
-    (*root)->body.content = NULL;
-  }
+  free((*root)->body.content);
+  (*root)->body.content = NULL;
 
   free(*root);
   *root = NULL;
@@ -175,6 +178,7 @@ ast_add_body(
     return false;
   strncat(_body, body, len);
 
+  free(node->body.content);
   node->body = (struct ast_string_body_t){
     .content = _body,
     .length = len,
@@ -365,6 +369,13 @@ ast_draw(
           current_x += body_len; 
         }
         printw("]");
+        current_x++;
+
+        if (is_newline)
+        {
+          current_y++;
+          current_x = 0;
+        }
         break;
       }
 
@@ -425,6 +436,8 @@ ast_render(
   keypad (stdscr, TRUE);
   mousemask (ALL_MOUSE_EVENTS | REPORT_MOUSE_POSITION, &old);
 
+  curs_set(0); // hide cursor (unfocused on an element)
+
   ast_draw(root, interactive_items);
 
   while ((current_key = getch()) != KEY_ESC)
@@ -438,9 +451,12 @@ ast_render(
       clicked_item = iarray_find(interactive_items, mouse_x, mouse_y);
       if (clicked_item)
       {
+        curs_set(1); // show cursor (focused on an element)
         move(mouse_y, mouse_x);
         refresh();
       }
+      else
+        curs_set(0); // hide cursor (unfocused on an element)
     }
     else
     {
@@ -451,6 +467,7 @@ ast_render(
         const size_t position = mouse_x - clicked_item->x;
         ast_insert_char_to_body(clicked_item->node, (const char)current_key, position);
         clicked_item->width++;
+        iarray_shift_x_right(interactive_items, clicked_item->x, mouse_y, 1);
         ast_draw(root, interactive_items);
         mouse_x++;
         move(mouse_y, mouse_x);

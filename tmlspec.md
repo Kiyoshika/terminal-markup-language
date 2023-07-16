@@ -83,6 +83,7 @@ Acceptable colours used in attributes such as `fg`, `bg`, etc.:
 * [Space](#space)
 * [Input](#input)
 * [Planned Future Tags](#planned-future-tags)
+* [Planned Future Attributes](#planned-future-attributes)
 
 
 ## Root
@@ -91,7 +92,7 @@ Acceptable colours used in attributes such as `fg`, `bg`, etc.:
 **Description:** The root node that contains all other tags. Allows user to configure background colour of entire terminal.
 
 **Attributes:**
-* (optional) `bg` - background; the background colour of the terminal
+* `bg` - background; the background colour of the terminal
   * default value: black
 
 **Examples:**
@@ -124,15 +125,15 @@ This creates a white terminal where all nodes will have a red foreground by defa
 **Description:** Write a line of text. Note that any whitespace in the tag body is consumed (ignored). If you wish to add a space between text nodes on the same line, use the [space tag](#space).
 
 **Attributes:**
-* (optional) `fg` - foreground; the colour of the text itself
+* `fg` - foreground; the colour of the text itself
   * default value: same as parent node
-* (optional) `bg` - background; the background colour of the text
+* `bg` - background; the background colour of the text
   * default value: same as parent node
-* (optional) `bold` - if present, make text bold
+* `bold` - if present, make text bold
   * default value: `false `
-* (optional) `newline` - determine whether or not to add a newline after the text is written
+* `newline` - determine whether or not to add a newline after the text is written
   * default value: `true`
-* (optional) `id` - An ID that can be referenced in callback functions
+* `id` - An ID that can be referenced in callback functions
 
 NOTE: you can use this tag as a newline by using the shorthand `<text/>` which only prints a newline
 
@@ -180,17 +181,36 @@ hello there
 
 **Description:** Get input from a user and pass it to a callback. Click anywhere in the input box to start typing.
 
+The input box is notated with square brackets `[]` with the text appearing between such as `[hello there]`.
+
+Users can click anywhere in the text box (except the last closing bracket) and text will appear after the cursor when typing.
+
+Clicking outside the text box will disable focus and prevent any more text from being written until refocused.
+
+For single line inputs (`multiline=false`), pressing the enter/return key will trigger the callback. For multiline inputs (`multiline=true`) the enter/return key will instead print a newline in the input box and users will have to use a button to trigger the callback instead.
+
+Multiline inputs (`multiline=true`) are notated with a double square bracket `[[]]` to make the distinction more clear.
+
+```text
+[[this is some
+multiline text]]
+```
+
 **Attributes:**
-* (required) `callback` - function name to call when user submits. callback function must take a single `string` argument
-* (optional) `fg` - the foreground colour of the input box and text inside it
+* `callback` - function name to call when user submits. callback function must take a single `string` argument
+* `fg` - the foreground colour of the input box and text inside it
   * default value: same as parent node
-* (optional) `bg` - the background colour of the input box
+* `bg` - the background colour of the input box
   * default value: same as parent node
-* (optional) `minLength` - min length of the buffer; prevents user from submitting until this length is reached
-  * default value: `1`
-* (optional) `maxLength` - max length of the buffer; prevents user from inputting more characters
+* `minLength` - min length of the buffer; prevents user from submitting until this length is reached
+  * default value: `0`
+* `maxLength` - max length of the buffer; prevents user from inputting more characters
   * default value: `25`
-* (optional) `password` - mask the input with `*` used for password or secret inputs
+* `password` - mask the input with `*` used for password or secret inputs
+  * default value: `false`
+* `newline` - determine whether to add a newline after the input box
+  * default value: `true`
+* `multiline` - allow multiline input (note that this disables the enter/return key from triggering the callback and will have to use a button instead)
   * default value: `false`
 
 **Examples:**
@@ -230,3 +250,9 @@ Some tags that are planned in future iterations, these are not yet documented/fu
 * `<stack>`
 * `<center>`
 * `<group>` (kind of like html's div, can group child nodes together to apply same formatting/styles)
+
+## Planned Future Attributes
+Some future attributes that are planned:
+* `marginLeft` - add N space characters to the left of the current tag
+* `marginRight` - add N space characters to the right of the current tag
+* `hidden` - toggle whether to display the current tag or not

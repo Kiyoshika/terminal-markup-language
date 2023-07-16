@@ -59,8 +59,8 @@ iarray_add(
 struct iarray_item_t*
 iarray_find(
   const struct iarray_t* const array,
-  size_t x,
-  size_t y)
+  const size_t x,
+  const size_t y)
 {
   for (size_t i = 0; i < array->length; ++i)
   {
@@ -70,6 +70,28 @@ iarray_find(
   }
 
   return NULL;
+}
+
+void
+iarray_shift_x_right(
+  struct iarray_t* const array,
+  const size_t clicked_item_x,
+  const size_t y,
+  const size_t n)
+{
+  /* if user has multiple interactive items on the same Y value and the
+     value of the content changes in one of them, need to shift all other items after it
+     to the right n times.
+
+     E.g., if we have two text boxes:
+     [][]
+     And you insert a character in the first one:
+     [h][]
+     Need to properly shift the bounds of the right text box so we can still capture mouse events
+  */
+  for (size_t i = 0; i < array->length; ++i)
+    if (array->items[i].y == y && array->items[i].x > clicked_item_x)
+      array->items[i].x += n;
 }
 
 void
