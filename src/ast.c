@@ -1,4 +1,6 @@
 #include "ast.h"
+#include "iarray.h"
+#include <ctype.h>
 
 struct ast_t*
 ast_create(
@@ -14,7 +16,12 @@ ast_create(
 
   node->parent = parent;
   node->type = type; 
-  node->body = NULL;
+
+  node->body = (struct ast_string_body_t){
+    .content = NULL,
+    .length = 0,
+    .capacity = 0
+  };
 
   switch (node->type)
   {
@@ -117,8 +124,11 @@ ast_free(
   free((*root)->attributes);
   (*root)->attributes = NULL;
 
-  free((*root)->body);
-  (*root)->body = NULL;
+  if ((*root)->contains_body)
+  {
+    free((*root)->body.content);
+    (*root)->body.content = NULL;
+  }
 
   free(*root);
   *root = NULL;
@@ -158,11 +168,19 @@ ast_add_body(
   struct ast_t* node,
   const char* const body)
 {
-  char* _body = strdup(body);
+  size_t len = strlen(body);
+  size_t capacity = len * 2;
+  char* _body = calloc(capacity, sizeof(char));
   if (!_body)
     return false;
+  strncat(_body, body, len);
 
-  node->body = _body;
+  node->body = (struct ast_string_body_t){
+    .content = _body,
+    .length = len,
+    .capacity = capacity
+  };
+
   return true;
 }
 
@@ -201,7 +219,8 @@ ast_get_colour_id(
 
 void
 ast_draw(
-  const struct ast_t* const root)
+  const struct ast_t* const root,
+  struct iarray_t* const interactive_items)
 {
   const size_t n_colours = 8;
 
@@ -309,8 +328,8 @@ ast_draw(
         if (is_bold)
           attron(A_BOLD);
         // if length is 0, print nothing, otherwise it prints "(null)"
-        if (child->body && strlen(child->body) > 0)
-          printw("%s", child->body);
+        if (child->body.length > 0)
+          printw("%s", child->body.content);
         attroff(A_BOLD);
         if (is_newline)
         {
@@ -318,7 +337,7 @@ ast_draw(
           current_x = 0;
         }
         else
-          current_x += strlen(child->body);
+          current_x += child->body.length;
         break;
       }
 
@@ -332,13 +351,18 @@ ast_draw(
 
       case TML_NODE_INPUT:
       {
+        size_t body_len = 0;
+        if (child->contains_body)
+          body_len = child->body.length;
+
+        iarray_add(interactive_items, child, current_x, current_y, body_len + 1);
         move(current_y, current_x);
         printw("[");
         current_x++;
-        if (child->body && strlen(child->body) > 0)
+        if (body_len > 0)
         {
-          printw("%s", child->body);
-          current_x += strlen(child->body);
+          printw("%s", child->body.content);
+          current_x += body_len; 
         }
         printw("]");
         break;
@@ -356,12 +380,43 @@ ast_draw(
 }
 
 void
+ast_insert_char_to_body(
+  struct ast_t* const ast,
+  const char c,
+  const size_t position)
+{
+  size_t i = ast->body.length + 1;
+  while (i > 1 && i --> position)
+    ast->body.content[i] = ast->body.content[i - 1];
+  ast->body.content[position] = c;
+  ast->body.length++;
+
+  if (ast->body.length == ast->body.capacity)
+  {
+    size_t new_capacity = ast->body.capacity * 2;
+    void* alloc = realloc(ast->body.content, new_capacity);
+    if (!alloc)
+      return;
+    ast->body.content = alloc;
+    ast->body.capacity = new_capacity;
+    memset(&ast->body.content[ast->body.length], 0, ast->body.capacity - ast->body.length);
+  }
+}
+
+void
 ast_render(
   const struct ast_t* const root)
 {
+  struct iarray_t* interactive_items = iarray_create();
+  if (!interactive_items)
+    return;
+
   const int KEY_ESC = 27; // also technically ALT but we don't need that key
   int current_key = 0;
   mmask_t old;
+  struct iarray_item_t* clicked_item = NULL;
+  size_t mouse_x = 0;
+  size_t mouse_y = 0;
 
   initscr ();
   clear();
@@ -370,19 +425,39 @@ ast_render(
   keypad (stdscr, TRUE);
   mousemask (ALL_MOUSE_EVENTS | REPORT_MOUSE_POSITION, &old);
 
-  ast_draw(root);
+  ast_draw(root, interactive_items);
 
-  while ((current_key = getch ()) != KEY_ESC)
+  while ((current_key = getch()) != KEY_ESC)
   {
     if (current_key == KEY_MOUSE)
     {
-       MEVENT event;
-       getmouse(&event);
-       move(event.y, event.x);
-       refresh();
+      MEVENT event;
+      getmouse(&event);
+      mouse_x = event.x;
+      mouse_y = event.y;
+      clicked_item = iarray_find(interactive_items, mouse_x, mouse_y);
+      if (clicked_item)
+      {
+        move(mouse_y, mouse_x);
+        refresh();
+      }
     }
     else
-      ast_draw(root);
+    {
+      if (clicked_item 
+          && clicked_item->node->type == TML_NODE_INPUT
+          && (isalnum(current_key) || ispunct(current_key) || isdigit(current_key) || current_key == ' '))
+      {
+        const size_t position = mouse_x - clicked_item->x;
+        ast_insert_char_to_body(clicked_item->node, (const char)current_key, position);
+        clicked_item->width++;
+        ast_draw(root, interactive_items);
+        mouse_x++;
+        move(mouse_y, mouse_x);
+        refresh();
+      }
+    }
   }
   endwin();
+  iarray_free(&interactive_items);
 }

@@ -16,6 +16,9 @@
 #define TML_ATTRIBUTE_NAME_LEN 21
 #define TML_ATTRIBUTE_VALUE_LEN 21
 
+// forward declarations
+struct iarray_t;
+
 enum ast_node_type_e
 {
   TML_NODE_NONE = 0u,
@@ -70,13 +73,20 @@ struct ast_attribute_pair_t
   const char* custom_value;
 };
 
+struct ast_string_body_t
+{
+  char* content;
+  size_t length;
+  size_t capacity;
+};
+
 struct ast_t
 {
   enum ast_node_type_e type;
   // labels whether or not a tag could contain a body (e.g., text field)
   // this does NOT include the root tag <tml></tml>
   bool contains_body; // <tag>body</tag>
-  char* body;
+  struct ast_string_body_t body;
 
   struct ast_t* parent;
 
@@ -123,10 +133,17 @@ ast_free(
 
 void
 ast_draw(
-  const struct ast_t* const root);
+  const struct ast_t* const root,
+  struct iarray_t* const interactive_items);
 
 void
 ast_render(
   const struct ast_t* const root);
+
+void
+ast_insert_char_to_body(
+  struct ast_t* const ast,
+  const char c,
+  const size_t position);
 
 #endif
