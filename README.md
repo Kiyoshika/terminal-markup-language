@@ -3,10 +3,25 @@ This is a custom renderer to build (somewhat) interactive terminal applications 
 
 See the [TML Specification](tmlspec.md).
 
-## Preview (29 June 2023)
-This is the first preview after text rendering was first implemented:
+## Preview (16 July 2023)
+This is a sample preview with a regular & password input box and some basic formatting.
 
 ![image](https://github.com/Kiyoshika/tml/assets/49159969/b92aecd5-94ac-42f7-b8dc-f19938a111b0)
+
+Rendered from the following TML:
+```text
+<tml>
+  <text bold=true fg=cyan>Login:</text>
+
+  <text/>
+
+  <text bold=true newline=false>Email:</text><space/>
+  <input fg=red bg=white/>
+
+  <text bold=true newline=false>Password:</text><space/>
+  <input password=true fg=red bg=white/>
+</tml>
+```
 
 ## Building
 This relies on ncurses for all the UI stuff:

@@ -57,17 +57,8 @@ ast_render_input(
   if (node->contains_body)
     body_len = node->body.length;
 
-  if (attributes->is_multiline)
-    iarray_add(interactive_items, node, *current_x + 1, *current_y, body_len + 1);
-  else
-    iarray_add(interactive_items, node, *current_x, *current_y, body_len + 1);
+  iarray_add(interactive_items, node, *current_x + 1, *current_y, body_len + 1);
   move(*current_y, *current_x);
-
-  if (attributes->is_multiline)
-  {
-    printw("[");
-    (*current_x)++;
-  }
 
   printw("[");
   (*current_x)++;
@@ -90,12 +81,6 @@ ast_render_input(
       printw("%s", node->body.content);
 
     *current_x += body_len; 
-  }
-
-  if (attributes->is_multiline)
-  {
-    printw("]");
-    (*current_x)++;
   }
 
   printw("]");

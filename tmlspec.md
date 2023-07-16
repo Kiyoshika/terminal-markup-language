@@ -183,18 +183,9 @@ hello there
 
 The input box is notated with square brackets `[]` with the text appearing between such as `[hello there]`.
 
-Users can click anywhere in the text box (except the last closing bracket) and text will appear after the cursor when typing.
+Users can click anywhere in the text box (except the first opening bracket) and text will appear where the cursor is when typing.
 
 Clicking outside the text box will disable focus and prevent any more text from being written until refocused.
-
-For single line inputs (`multiline=false`), pressing the enter/return key will trigger the callback. For multiline inputs (`multiline=true`) the enter/return key will instead print a newline in the input box and users will have to use a button to trigger the callback instead.
-
-Multiline inputs (`multiline=true`) are notated with a double square bracket `[[]]` to make the distinction more clear.
-
-```text
-[[this is some
-multiline text]]
-```
 
 **Attributes:**
 * `callback` - function name to call when user submits. callback function must take a single `string` argument
@@ -210,8 +201,6 @@ multiline text]]
   * default value: `false`
 * `newline` - determine whether to add a newline after the input box
   * default value: `true`
-* `multiline` - allow multiline input (note that this disables the enter/return key from triggering the callback and will have to use a button instead)
-  * default value: `false`
 
 **Examples:**
 
@@ -226,8 +215,13 @@ NOTE: as of the version of this spec, the scripting language is not yet designed
   <text>Last Name:</text>
   <text id=lastNameId></text>
 
-  <input callback=setFirstName>Enter First Name:</input>
-  <input callback=setLastName>Enter Last Name:</input>
+  <text/>
+
+  <text newline=false>Enter First Name:</text><space/>
+  <input callback=setFirstName/>
+
+  <text newline=false>Enter Last Name:</text><space/>
+  <input callback=setLastName/>
 
   <script>
     function setFirstName(string firstName) {
@@ -239,6 +233,19 @@ NOTE: as of the version of this spec, the scripting language is not yet designed
     }
   </script>
 </tml>
+```
+
+Would be rendered as (after typing in inputs and pressing enter on each one):
+
+```text
+First Name:
+Zach
+
+Last Name:
+Weaver
+
+Enter First Name: [Zach]
+Enter Last Name: [Weaver]
 ```
 
 ## Planned Future Tags

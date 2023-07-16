@@ -65,7 +65,7 @@ iarray_find(
   for (size_t i = 0; i < array->length; ++i)
   {
       if (array->items[i].y == y
-          && (x >= array->items[i].x && x < array->items[i].x + array->items[i].width))
+          && (x >= array->items[i].x && x <= array->items[i].x + array->items[i].width))
         return &array->items[i];
   }
 

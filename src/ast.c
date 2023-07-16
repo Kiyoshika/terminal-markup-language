@@ -91,7 +91,6 @@ ast_init_attributes(
   attributes->is_bold = false;
   attributes->is_newline = true;
   attributes->is_password = false;
-  attributes->is_multiline = false;
 }
 
 void
@@ -125,9 +124,6 @@ ast_set_attributes_from_node(
        break;
       case TML_ATTRIBUTE_PASSWORD:
         attributes->is_password = node->attributes[attr].value == TML_ATTRIBUTE_VALUE_TRUE;
-        break;
-      case TML_ATTRIBUTE_MULTILINE:
-        attributes->is_multiline = node->attributes[attr].value == TML_ATTRIBUTE_VALUE_TRUE;
         break;
       case TML_ATTRIBUTE_NULL:
         break;
@@ -325,7 +321,6 @@ ast_draw(
       case TML_ATTRIBUTE_MAXLENGTH:
       case TML_ATTRIBUTE_CALLBACK:
       case TML_ATTRIBUTE_PASSWORD:
-      case TML_ATTRIBUTE_MULTILINE:
         break;
     }
   }
@@ -479,7 +474,7 @@ ast_render(
     {
       if (clicked_item 
           && clicked_item->node->type == TML_NODE_INPUT
-          && (isalnum(current_key) || ispunct(current_key) || isdigit(current_key) || current_key == ' ' || current_key == '\n'))
+          && (isalnum(current_key) || ispunct(current_key) || isdigit(current_key) || current_key == ' '))
       {
         const size_t position = mouse_x - clicked_item->x;
         ast_insert_char_to_body(clicked_item->node, (const char)current_key, position);
