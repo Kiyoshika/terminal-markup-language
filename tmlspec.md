@@ -10,6 +10,8 @@ Interactable items (input, buttons, etc.) can be clicked on with the mouse.
 ## Overview
 This is a markup language similar to HTML to create elements to be rendered onto a terminal screen.
 
+Press the `ESC` key to properly exit the renderer (using `Ctrl+C` may not properly cleanup resources and can lead to buggy behaviour.)
+
 A bit of terminology: tags (`<tag>`) are sometimes referred to as nodes, especialy in error messages. Node/tag are interchangeable.
 
 The extension for a tml file is `.tml` and must contain exactly one root node (tag) `<tml>`:
