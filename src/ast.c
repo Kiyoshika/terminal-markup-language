@@ -221,6 +221,7 @@ ast_get_colour_id(
   return 0;
 }
 
+/* TODO: this function is growing very large and can use some cleanup */
 void
 ast_draw(
   const struct ast_t* const root,
@@ -429,12 +430,12 @@ ast_render(
   size_t mouse_x = 0;
   size_t mouse_y = 0;
 
-  initscr ();
+  initscr();
   clear();
-  noecho ();
-  cbreak ();
-  keypad (stdscr, TRUE);
-  mousemask (ALL_MOUSE_EVENTS | REPORT_MOUSE_POSITION, &old);
+  noecho();
+  cbreak();
+  keypad(stdscr, TRUE);
+  mousemask(ALL_MOUSE_EVENTS | REPORT_MOUSE_POSITION, &old);
 
   curs_set(0); // hide cursor (unfocused on an element)
 

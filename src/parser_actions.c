@@ -406,8 +406,8 @@ _parser_actions_slash(
   if (!_close_and_insert_tag(context, current_node, err_msg, true))
     return false;
 
-  // skip past close tag
   context->source_buffer_idx++;
   context->state = TML_STATE_OPENING_TAG;
+  context->current_token = TML_TOKEN_CLOSE_TAG;
   return true;
 }
