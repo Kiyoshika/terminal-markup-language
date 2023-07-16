@@ -227,6 +227,7 @@ ast_draw(
   const struct ast_t* const root,
   struct iarray_t* const interactive_items)
 {
+  clear();
   const size_t n_colours = 8;
 
   if (has_colors())
@@ -416,6 +417,17 @@ ast_insert_char_to_body(
 }
 
 void
+ast_remove_char_from_body(
+  struct ast_t* const ast,
+  const size_t position)
+{
+  for (size_t i = position; i < ast->body.length; ++i)
+    ast->body.content[i] = ast->body.content[i + 1];
+  ast->body.content[ast->body.length - 1] = '\0';
+  ast->body.length--;
+}
+
+void
 ast_render(
   const struct ast_t* const root)
 {
@@ -458,6 +470,31 @@ ast_render(
       }
       else
         curs_set(0); // hide cursor (unfocused on an element)
+    }
+    else if (current_key == KEY_BACKSPACE)
+    {
+      if (clicked_item
+          && clicked_item->node->type == TML_NODE_INPUT)
+      {
+        // do not backspace if the content is empty
+        if (clicked_item->node->body.length == 0)
+          continue;
+
+        // do not backspace if we're at the beginning of the input
+        if (mouse_x == clicked_item->x)
+          continue;
+
+        size_t position = mouse_x - clicked_item->x;
+        if (position > 0)
+          position--;
+        ast_remove_char_from_body(clicked_item->node, position);
+        clicked_item->width--;
+        iarray_shift_x_left(interactive_items, clicked_item->x, mouse_y, 1);
+        ast_draw(root, interactive_items);
+        mouse_x--;
+        move(mouse_y, mouse_x);
+        refresh();
+      }
     }
     else
     {

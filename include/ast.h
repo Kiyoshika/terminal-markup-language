@@ -146,4 +146,9 @@ ast_insert_char_to_body(
   const char c,
   const size_t position);
 
+void
+ast_remove_char_from_body(
+  struct ast_t* const ast,
+  const size_t position);
+
 #endif

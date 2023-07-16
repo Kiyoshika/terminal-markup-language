@@ -80,18 +80,40 @@ iarray_shift_x_right(
   const size_t n)
 {
   /* if user has multiple interactive items on the same Y value and the
-     value of the content changes in one of them, need to shift all other items after it
+     value of the content increases in one of them, need to shift all other items after it
      to the right n times.
 
      E.g., if we have two text boxes:
      [][]
      And you insert a character in the first one:
      [h][]
-     Need to properly shift the bounds of the right text box so we can still capture mouse events
+     Need to properly shift the bounds of the right text box so we can still capture mouse events properly
   */
   for (size_t i = 0; i < array->length; ++i)
     if (array->items[i].y == y && array->items[i].x > clicked_item_x)
       array->items[i].x += n;
+}
+
+void
+iarray_shift_x_left(
+  struct iarray_t* const array,
+  const size_t clicked_item_x,
+  const size_t y,
+  const size_t n)
+{
+  /* if user has multiple interactive items on the same Y value and the
+     value of the content decreases in one of them (e.g., backspace), need to shift all other items after it
+     to the left n times.
+
+     E.g., if we have two text boxes:
+     [hey][]
+     And you delete a character in the first one:
+     [he][]
+     Need to properly shift the bounds of the right text box so we can still capture mouse events properly
+  */
+  for (size_t i = 0; i < array->length; ++i)
+    if (array->items[i].y == y && array->items[i].x > clicked_item_x)
+      array->items[i].x -= n;
 }
 
 void

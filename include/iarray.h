@@ -55,6 +55,13 @@ iarray_shift_x_right(
   const size_t n);
 
 void
+iarray_shift_x_left(
+  struct iarray_t* const array,
+  const size_t clicked_item_x,
+  const size_t y,
+  const size_t n);
+
+void
 iarray_free(
   struct iarray_t** array);
 
