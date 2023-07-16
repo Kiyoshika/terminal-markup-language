@@ -20,6 +20,7 @@ Rendered from the following TML:
 
   <text bold=true newline=false>Password:</text><space/>
   <input password=true fg=red bg=white/>
+
 </tml>
 ```
 
