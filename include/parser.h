@@ -101,15 +101,15 @@ parser_read_source_file(
 
 enum ast_node_type_e
 parser_get_node_type(
-  const char* const tag_text);
+  const struct parse_context_t* const context);
 
 enum ast_attribute_type_e
 parser_get_attribute_type(
-  const char* const attribute_text);
+  const struct parse_context_t* const context);
 
 enum ast_attribute_value_e
 parser_get_attribute_value(
-  const char* const attribute_value_text);
+  const struct parse_context_t* const context);
 
 enum tml_token_type_e
 parser_get_token_type(

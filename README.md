@@ -3,40 +3,24 @@ This is a custom renderer to build (somewhat) interactive terminal applications 
 
 See the [TML Specification](tmlspec.md).
 
-## Preview (09 July 2023)
-Below is a preview of rendering some text with different colours/attributes:
+## Preview (16 July 2023)
+This is a sample preview with a regular & password input box and some basic formatting.
 
-![Capture](https://github.com/Kiyoshika/tml/assets/49159969/8764c835-2ffa-44bd-a9af-db8b69964e25)
+![loginsample](https://github.com/Kiyoshika/tml/assets/49159969/597b0b22-7a0f-4ca9-80c4-28f1fe816761)
 
-Which was rendered with the following tml script:
+Rendered from the following TML:
 ```text
-<tml
-  bg=blue
-  fg=white>
-
-  <text bold=true>
-    I'm some text
-  </text>
-
-  <text
-    fg=red
-    newline=false>
-    I'm some other text!!
-  </text>
-
-  <text
-    bg=black
-    fg=yellow
-    #nuggets$$&
-  </text>
+<tml>
+  <text bold=true fg=cyan>Login:</text>
 
   <text/>
-  
-  <text newline=false>this</text>
-  <space/>
-  <text newline=false bold=true>word</text>
-  <space/>
-  <text>is bold.</text>
+
+  <text bold=true newline=false>Email:</text><space/>
+  <input fg=red bg=white/>
+
+  <text bold=true newline=false>Password:</text><space/>
+  <input password=true fg=red bg=white/>
+
 </tml>
 ```
 

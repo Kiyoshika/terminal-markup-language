@@ -9,32 +9,44 @@
 
 #include "colours.h"
 
-#define N_TOKEN_TYPES 3
-#define N_ATTRIBUTE_TYPES 4
-#define N_ATTRIBUTE_VALUES 10
+#define N_TOKEN_TYPES 4
+#define N_ATTRIBUTE_TYPES 8
+#define N_ATTRIBUTE_VALUES 11
 #define TML_TAG_NAME_LEN 21
 #define TML_ATTRIBUTE_NAME_LEN 21
 #define TML_ATTRIBUTE_VALUE_LEN 21
+
+// forward declarations
+struct iarray_t;
 
 enum ast_node_type_e
 {
   TML_NODE_NONE = 0u,
   TML_NODE_ROOT = (1 << 0u),
   TML_NODE_TEXT = (1 << 1u),
-  TML_NODE_SPACE = (1 << 2u)
+  TML_NODE_SPACE = (1 << 2u),
+  TML_NODE_INPUT = (1 << 3u),
 };
 
 enum ast_attribute_type_e
 {
   TML_ATTRIBUTE_NULL = 0u,
-  // fg=...
+  // fg=
   TML_ATTRIBUTE_FOREGROUND = (1 << 0u),
-  // bg=...
+  // bg=
   TML_ATTRIBUTE_BACKGROUND = (1 << 1u),
   // newline=
   TML_ATTRIBUTE_NEWLINE = (1 << 2u),
   // bold=
   TML_ATTRIBUTE_BOLD = (1 << 3u),
+  // callback=
+  TML_ATTRIBUTE_CALLBACK = (1 << 4u),
+  // minLength=
+  TML_ATTRIBUTE_MINLENGTH = (1 << 5u),
+  // maxLength=
+  TML_ATTRIBUTE_MAXLENGTH = (1 << 6u),
+  // password=
+  TML_ATTRIBUTE_PASSWORD = (1 << 7u),
 };
 
 enum ast_attribute_value_e
@@ -52,12 +64,34 @@ enum ast_attribute_value_e
   // booleans
   TML_ATTRIBUTE_VALUE_TRUE = (1 << 8u),
   TML_ATTRIBUTE_VALUE_FALSE = (1 << 9u),
+  // custom value (e.g., id or callback text)
+  TML_ATTRIBUTE_VALUE_CUSTOM = (1 << 10u),
 };
 
 struct ast_attribute_pair_t
 {
   const enum ast_attribute_type_e type;
   const enum ast_attribute_value_e value;
+  const char* custom_value;
+};
+
+struct ast_string_body_t
+{
+  char* content;
+  size_t length;
+  size_t capacity;
+};
+
+// struct used when rendering/drawing ast
+struct ast_attributes_t
+{
+  bool change_colour;
+  size_t fg;
+  size_t bg;
+  bool is_newline;
+  bool is_bold;
+  bool is_password;
+  bool is_multiline;
 };
 
 struct ast_t
@@ -66,7 +100,7 @@ struct ast_t
   // labels whether or not a tag could contain a body (e.g., text field)
   // this does NOT include the root tag <tml></tml>
   bool contains_body; // <tag>body</tag>
-  char* body;
+  struct ast_string_body_t body;
 
   struct ast_t* parent;
 
@@ -90,11 +124,21 @@ ast_create(
   const enum ast_node_type_e type,
   struct ast_t* parent);
 
+void
+ast_init_attributes(
+  struct ast_attributes_t* const attributes);
+
+void
+ast_set_attributes_from_node(
+  const struct ast_t* const node,
+  struct ast_attributes_t* const attributes);
+
 bool
 ast_add_attribute(
   struct ast_t* node,
   const enum ast_attribute_type_e type,
-  const enum ast_attribute_value_e value);
+  const enum ast_attribute_value_e value,
+  const char* custom_value);
 
 bool
 ast_add_child(
@@ -111,7 +155,23 @@ ast_free(
   struct ast_t** root);
 
 void
+ast_draw(
+  const struct ast_t* const root,
+  struct iarray_t* const interactive_items);
+
+void
 ast_render(
   const struct ast_t* const root);
+
+void
+ast_insert_char_to_body(
+  struct ast_t* const ast,
+  const char c,
+  const size_t position);
+
+void
+ast_remove_char_from_body(
+  struct ast_t* const ast,
+  const size_t position);
 
 #endif

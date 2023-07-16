@@ -1,4 +1,7 @@
 #include "ast.h"
+#include "ast_internal.h"
+#include "iarray.h"
+#include <ctype.h>
 
 struct ast_t*
 ast_create(
@@ -14,14 +17,25 @@ ast_create(
 
   node->parent = parent;
   node->type = type; 
-  node->body = NULL;
+
+  node->body = (struct ast_string_body_t){
+    .content = calloc(10, sizeof(char)),
+    .length = 0,
+    .capacity = 10
+  };
+
+  if (!node->body.content)
+  {
+    free(node);
+    return NULL;
+  }
 
   switch (node->type)
   {
     case TML_NODE_ROOT:
     {
       node->contains_body = false;
-      node->allowed_children_nodes = TML_NODE_TEXT | TML_NODE_SPACE;
+      node->allowed_children_nodes = TML_NODE_TEXT | TML_NODE_SPACE | TML_NODE_INPUT;
       break;
     }
     case TML_NODE_TEXT:
@@ -34,6 +48,13 @@ ast_create(
     {
       node->contains_body = false;
       node->allowed_children_nodes = TML_NODE_NONE;
+      break;
+    }
+    case TML_NODE_INPUT:
+    {
+      node->contains_body = true;
+      node->allowed_children_nodes = TML_NODE_NONE;
+      break;
     }
     case TML_NODE_NONE:
       break;
@@ -60,15 +81,67 @@ ast_create(
   return node;
 }
 
+void
+ast_init_attributes(
+  struct ast_attributes_t* const attributes)
+{
+  attributes->fg = 0;
+  attributes->bg = 0;
+  attributes->change_colour = false;
+  attributes->is_bold = false;
+  attributes->is_newline = true;
+  attributes->is_password = false;
+}
+
+void
+ast_set_attributes_from_node(
+  const struct ast_t* const node,
+  struct ast_attributes_t* const attributes)
+{
+  for (size_t attr = 0; attr < node->n_attributes; ++attr)
+  {
+    switch (node->attributes[attr].type)
+    {
+      case TML_ATTRIBUTE_FOREGROUND:
+      {
+        attributes->change_colour = true;
+        attributes->fg = ast_get_colour_id(node->attributes[attr].value);
+        break;
+      }
+
+      case TML_ATTRIBUTE_BACKGROUND:
+      {
+        attributes->change_colour = true;
+        attributes->bg = ast_get_colour_id(node->attributes[attr].value);
+        break;
+      }
+
+      case TML_ATTRIBUTE_NEWLINE:
+        attributes->is_newline = node->attributes[attr].value == TML_ATTRIBUTE_VALUE_TRUE;
+        break;
+      case TML_ATTRIBUTE_BOLD:
+       attributes->is_bold = node->attributes[attr].value == TML_ATTRIBUTE_VALUE_TRUE;
+       break;
+      case TML_ATTRIBUTE_PASSWORD:
+        attributes->is_password = node->attributes[attr].value == TML_ATTRIBUTE_VALUE_TRUE;
+        break;
+      case TML_ATTRIBUTE_NULL:
+        break;
+    }
+  }
+}
+
 bool
 ast_add_attribute(
   struct ast_t* node,
   const enum ast_attribute_type_e type,
-  const enum ast_attribute_value_e value)
+  const enum ast_attribute_value_e value,
+  const char* custom_value)
 {
   struct ast_attribute_pair_t attribute = {
     .type = type,
-    .value = value
+    .value = value,
+    .custom_value = custom_value
   };
 
   memcpy(&node->attributes[node->n_attributes++], &attribute, sizeof(attribute));
@@ -108,8 +181,8 @@ ast_free(
   free((*root)->attributes);
   (*root)->attributes = NULL;
 
-  free((*root)->body);
-  (*root)->body = NULL;
+  free((*root)->body.content);
+  (*root)->body.content = NULL;
 
   free(*root);
   *root = NULL;
@@ -149,11 +222,20 @@ ast_add_body(
   struct ast_t* node,
   const char* const body)
 {
-  char* _body = strdup(body);
+  size_t len = strlen(body);
+  size_t capacity = len * 2;
+  char* _body = calloc(capacity, sizeof(char));
   if (!_body)
     return false;
+  strncat(_body, body, len);
 
-  node->body = _body;
+  free(node->body.content);
+  node->body = (struct ast_string_body_t){
+    .content = _body,
+    .length = len,
+    .capacity = capacity
+  };
+
   return true;
 }
 
@@ -183,6 +265,7 @@ ast_get_colour_id(
     case TML_ATTRIBUTE_VALUE_TRUE:
     case TML_ATTRIBUTE_VALUE_FALSE:
     case TML_ATTRIBUTE_VALUE_NONE:
+    case TML_ATTRIBUTE_VALUE_CUSTOM:
       return 0;
   }
 
@@ -190,13 +273,13 @@ ast_get_colour_id(
 }
 
 void
-ast_render(
-  const struct ast_t* const root)
+ast_draw(
+  const struct ast_t* const root,
+  struct iarray_t* const interactive_items)
 {
+  clear();
   const size_t n_colours = 8;
 
-  // ncurses setup
-  initscr();
   if (has_colors())
   {
     // this initialises every colour combination according
@@ -234,6 +317,10 @@ ast_render(
       case TML_ATTRIBUTE_NEWLINE:
       case TML_ATTRIBUTE_BOLD:
       case TML_ATTRIBUTE_NULL:
+      case TML_ATTRIBUTE_MINLENGTH:
+      case TML_ATTRIBUTE_MAXLENGTH:
+      case TML_ATTRIBUTE_CALLBACK:
+      case TML_ATTRIBUTE_PASSWORD:
         break;
     }
   }
@@ -243,49 +330,17 @@ ast_render(
   wbkgd(stdscr, COLOR_PAIR(fg * n_colours + bg));
   attroff(A_BOLD);
 
-  bool is_bold = false;
-  bool is_newline = true;
-
   for (size_t i = 0; i < root->n_children; ++i)
   {
     struct ast_t* child = root->children[i];
 
     /* setup child attributes before rendering */
-    bool change_colour = false;
-    size_t temp_fg = fg;
-    size_t temp_bg = bg;
+    struct ast_attributes_t attributes;
+    ast_init_attributes(&attributes);
+    ast_set_attributes_from_node(child, &attributes);
 
-    for (size_t attr = 0; attr < child->n_attributes; ++attr)
-    {
-      switch (child->attributes[attr].type)
-      {
-        case TML_ATTRIBUTE_FOREGROUND:
-        {
-          change_colour = true;
-          temp_fg = ast_get_colour_id(child->attributes[attr].value);
-          break;
-        }
-
-        case TML_ATTRIBUTE_BACKGROUND:
-        {
-          change_colour = true;
-          temp_bg = ast_get_colour_id(child->attributes[attr].value);
-          break;
-        }
-
-        case TML_ATTRIBUTE_NEWLINE:
-          is_newline = child->attributes[attr].value == TML_ATTRIBUTE_VALUE_TRUE;
-          break;
-        case TML_ATTRIBUTE_BOLD:
-         is_bold = child->attributes[attr].value == TML_ATTRIBUTE_VALUE_TRUE;
-         break;
-        case TML_ATTRIBUTE_NULL:
-          break;
-      }
-    }
-
-    if (change_colour)
-      attrset(COLOR_PAIR(temp_fg * n_colours + temp_bg));
+    if (attributes.change_colour)
+      attrset(COLOR_PAIR(attributes.fg * n_colours + attributes.bg));
     else
       attrset(COLOR_PAIR(fg * n_colours + bg));
 
@@ -293,41 +348,145 @@ ast_render(
     switch (child->type)
     {
       case TML_NODE_TEXT:
-      {
-        move(current_y, current_x);
-        if (is_bold)
-          attron(A_BOLD);
-        // if length is 0, print nothing, otherwise it prints "(null)"
-        if (child->body && strlen(child->body) > 0)
-          printw("%s", child->body);
-        attroff(A_BOLD);
-        if (is_newline)
-        {
-          current_y++;
-          current_x = 0;
-        }
-        else
-          current_x += strlen(child->body);
+        ast_render_text(child, &attributes, interactive_items, &current_x, &current_y);
         break;
-      }
 
       case TML_NODE_SPACE:
-      {
-        move(current_y, current_x);
-        printw(" ");
-        current_x++;
+        ast_render_space(child, &attributes, interactive_items, &current_x, &current_y);
         break;
-      }
-
+      
+      case TML_NODE_INPUT:
+        ast_render_input(child, &attributes, interactive_items, &current_x, &current_y);
+        break;
+      
       case TML_NODE_NONE:
       case TML_NODE_ROOT:
         break;
     }
-
-    // reset to defaults
-    is_bold = false;
-    is_newline = true;
   }
-  getch();
+}
+
+void
+ast_insert_char_to_body(
+  struct ast_t* const ast,
+  const char c,
+  const size_t position)
+{
+  size_t i = ast->body.length + 1;
+  while (i > 1 && i --> position)
+    ast->body.content[i] = ast->body.content[i - 1];
+  ast->body.content[position] = c;
+  ast->body.length++;
+
+  if (ast->body.length == ast->body.capacity)
+  {
+    size_t new_capacity = ast->body.capacity * 2;
+    void* alloc = realloc(ast->body.content, new_capacity);
+    if (!alloc)
+      return;
+    ast->body.content = alloc;
+    ast->body.capacity = new_capacity;
+    memset(&ast->body.content[ast->body.length], 0, ast->body.capacity - ast->body.length);
+  }
+}
+
+void
+ast_remove_char_from_body(
+  struct ast_t* const ast,
+  const size_t position)
+{
+  for (size_t i = position; i < ast->body.length; ++i)
+    ast->body.content[i] = ast->body.content[i + 1];
+  ast->body.content[ast->body.length - 1] = '\0';
+  ast->body.length--;
+}
+
+void
+ast_render(
+  const struct ast_t* const root)
+{
+  struct iarray_t* interactive_items = iarray_create();
+  if (!interactive_items)
+    return;
+
+  const int KEY_ESC = 27; // also technically ALT but we don't need that key
+  int current_key = 0;
+  mmask_t old;
+  struct iarray_item_t* clicked_item = NULL;
+  size_t mouse_x = 0;
+  size_t mouse_y = 0;
+
+  initscr();
+  clear();
+  noecho();
+  cbreak();
+  keypad(stdscr, TRUE);
+  mousemask(ALL_MOUSE_EVENTS | REPORT_MOUSE_POSITION, &old);
+
+  curs_set(0); // hide cursor (unfocused on an element)
+
+  ast_draw(root, interactive_items);
+
+  while ((current_key = getch()) != KEY_ESC)
+  {
+    if (current_key == KEY_MOUSE)
+    {
+      MEVENT event;
+      getmouse(&event);
+      mouse_x = event.x;
+      mouse_y = event.y;
+      clicked_item = iarray_find(interactive_items, mouse_x, mouse_y);
+      if (clicked_item)
+      {
+        curs_set(1); // show cursor (focused on an element)
+        move(mouse_y, mouse_x);
+        refresh();
+      }
+      else
+        curs_set(0); // hide cursor (unfocused on an element)
+    }
+    else if (current_key == KEY_BACKSPACE)
+    {
+      if (clicked_item
+          && clicked_item->node->type == TML_NODE_INPUT)
+      {
+        // do not backspace if the content is empty
+        if (clicked_item->node->body.length == 0)
+          continue;
+
+        // do not backspace if we're at the beginning of the input
+        if (mouse_x == clicked_item->x)
+          continue;
+
+        size_t position = mouse_x - clicked_item->x;
+        if (position > 0)
+          position--;
+        ast_remove_char_from_body(clicked_item->node, position);
+        clicked_item->width--;
+        iarray_shift_x_left(interactive_items, clicked_item->x, mouse_y, 1);
+        ast_draw(root, interactive_items);
+        mouse_x--;
+        move(mouse_y, mouse_x);
+        refresh();
+      }
+    }
+    else
+    {
+      if (clicked_item 
+          && clicked_item->node->type == TML_NODE_INPUT
+          && (isalnum(current_key) || ispunct(current_key) || isdigit(current_key) || current_key == ' '))
+      {
+        const size_t position = mouse_x - clicked_item->x;
+        ast_insert_char_to_body(clicked_item->node, (const char)current_key, position);
+        clicked_item->width++;
+        iarray_shift_x_right(interactive_items, clicked_item->x, mouse_y, 1);
+        ast_draw(root, interactive_items);
+        mouse_x++;
+        move(mouse_y, mouse_x);
+        refresh();
+      }
+    }
+  }
   endwin();
+  iarray_free(&interactive_items);
 }

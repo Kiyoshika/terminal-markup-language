@@ -114,10 +114,16 @@ _parser_get_allowed_attribute_values(
 
     case TML_ATTRIBUTE_NEWLINE:
     case TML_ATTRIBUTE_BOLD:
+    case TML_ATTRIBUTE_PASSWORD:
     {
       return TML_ATTRIBUTE_VALUE_TRUE
            | TML_ATTRIBUTE_VALUE_FALSE;
     }
+
+    case TML_ATTRIBUTE_MINLENGTH:
+    case TML_ATTRIBUTE_MAXLENGTH:
+    case TML_ATTRIBUTE_CALLBACK:
+      return TML_ATTRIBUTE_VALUE_CUSTOM;
 
     case TML_ATTRIBUTE_NULL:
       return TML_ATTRIBUTE_VALUE_NONE;

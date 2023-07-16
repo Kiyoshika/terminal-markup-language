@@ -10,7 +10,8 @@
 const char* tml_tag_names[N_TOKEN_TYPES] = {
   "tml",
   "text",
-  "space"
+  "space",
+  "input"
 };
 
 // IMPORTANT: this must be ordered the same as
@@ -19,7 +20,11 @@ const char* tml_attribute_names[N_ATTRIBUTE_TYPES] = {
   "fg",
   "bg",
   "newline",
-  "bold"
+  "bold",
+  "callback",
+  "minLength",
+  "maxLength",
+  "password"
 };
 
 // IMPORTANT: this must be ordered the same as
@@ -34,7 +39,8 @@ const char* tml_attribute_values[N_ATTRIBUTE_VALUES] = {
   "green",
   "magenta",
   "true",
-  "false"
+  "false",
+  "custom"
 };
 
 bool
@@ -83,10 +89,10 @@ parser_read_source_file(
 
 enum ast_node_type_e
 parser_get_node_type(
-  const char* const tag_text)
+  const struct parse_context_t* const context)
 {
   for (size_t i = 0; i < (size_t)N_TOKEN_TYPES; ++i)
-    if (strcmp(tml_tag_names[i], tag_text) == 0)
+    if (strcmp(tml_tag_names[i], context->tag_name) == 0)
       return (1 << i);
 
   return TML_NODE_NONE;
@@ -94,10 +100,15 @@ parser_get_node_type(
 
 enum ast_attribute_value_e
 parser_get_attribute_value(
-  const char* const attribute_value_text)
+  const struct parse_context_t* const context)
 {
+  // TODO: move this to a function when we have more of these.
+  // there will be another check when "id" attribute is introduced
+  if (strcmp(context->attribute_name, "callback") == 0)
+    return TML_ATTRIBUTE_VALUE_CUSTOM;
+
   for (size_t i = 0; i < (size_t)N_ATTRIBUTE_VALUES; ++i)
-    if (strcmp(tml_attribute_values[i], attribute_value_text) == 0)
+    if (strcmp(tml_attribute_values[i], context->attribute_value) == 0)
       return (1 << i);
 
   return TML_ATTRIBUTE_VALUE_NONE;
@@ -105,10 +116,10 @@ parser_get_attribute_value(
 
 enum ast_attribute_type_e
 parser_get_attribute_type(
-  const char* const attribute_text)
+  const struct parse_context_t* const context)
 {
   for (size_t i = 0; i < (size_t)N_ATTRIBUTE_TYPES; ++i)
-    if (strcmp(tml_attribute_names[i], attribute_text) == 0)
+    if (strcmp(tml_attribute_names[i], context->attribute_name) == 0)
       return (1 << i);
 
   return TML_ATTRIBUTE_NULL;
