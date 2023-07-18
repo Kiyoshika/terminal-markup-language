@@ -85,6 +85,7 @@ _parser_append_tag_body_char(
     if (!alloc)
       return false;
     context->tag_body = alloc;
+    context->tag_body_capacity = new_capacity;
     // realloc doesn't guarantee clean zeros
     for (size_t i = context->tag_body_len; i < context->tag_body_capacity; ++i)
       context->tag_body[i] = '\0';
