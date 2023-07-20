@@ -126,7 +126,9 @@ ast_create(
 
 void
 ast_init_attributes(
-  struct ast_attributes_t* const attributes);
+  struct ast_attributes_t* const attributes,
+  const size_t fg,
+  const size_t bg);
 
 void
 ast_set_attributes_from_node(

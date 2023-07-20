@@ -83,11 +83,12 @@ ast_create(
 
 void
 ast_init_attributes(
-  struct ast_attributes_t* const attributes)
+  struct ast_attributes_t* const attributes,
+  const size_t fg,
+  const size_t bg)
 {
-  attributes->fg = 0;
-  attributes->bg = 0;
-  attributes->change_colour = false;
+  attributes->fg = fg;
+  attributes->bg = bg;
   attributes->is_bold = false;
   attributes->is_newline = true;
   attributes->is_password = false;
@@ -104,14 +105,12 @@ ast_set_attributes_from_node(
     {
       case TML_ATTRIBUTE_FOREGROUND:
       {
-        attributes->change_colour = true;
         attributes->fg = ast_get_colour_id(node->attributes[attr].value);
         break;
       }
 
       case TML_ATTRIBUTE_BACKGROUND:
       {
-        attributes->change_colour = true;
         attributes->bg = ast_get_colour_id(node->attributes[attr].value);
         break;
       }
@@ -336,13 +335,10 @@ ast_draw(
 
     /* setup child attributes before rendering */
     struct ast_attributes_t attributes;
-    ast_init_attributes(&attributes);
+    ast_init_attributes(&attributes, fg, bg);
     ast_set_attributes_from_node(child, &attributes);
 
-    if (attributes.change_colour)
-      attrset(COLOR_PAIR(attributes.fg * n_colours + attributes.bg));
-    else
-      attrset(COLOR_PAIR(fg * n_colours + bg));
+    attrset(COLOR_PAIR(attributes.fg * n_colours + attributes.bg));
 
     /* render content */
     switch (child->type)
