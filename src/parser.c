@@ -11,7 +11,8 @@ const char* tml_tag_names[N_TOKEN_TYPES] = {
   "tml",
   "text",
   "space",
-  "input"
+  "input",
+  "button"
 };
 
 // IMPORTANT: this must be ordered the same as

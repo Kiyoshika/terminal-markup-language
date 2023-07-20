@@ -35,7 +35,7 @@ ast_create(
     case TML_NODE_ROOT:
     {
       node->contains_body = false;
-      node->allowed_children_nodes = TML_NODE_TEXT | TML_NODE_SPACE | TML_NODE_INPUT;
+      node->allowed_children_nodes = TML_NODE_TEXT | TML_NODE_SPACE | TML_NODE_INPUT | TML_NODE_BUTTON;
       break;
     }
     case TML_NODE_TEXT:
@@ -55,6 +55,11 @@ ast_create(
       node->contains_body = true;
       node->allowed_children_nodes = TML_NODE_NONE;
       break;
+    }
+    case TML_NODE_BUTTON:
+    {
+      node->contains_body = true;
+      node->allowed_children_nodes = TML_NODE_NONE;
     }
     case TML_NODE_NONE:
       break;
@@ -353,6 +358,10 @@ ast_draw(
       
       case TML_NODE_INPUT:
         ast_render_input(child, &attributes, interactive_items, &current_x, &current_y);
+        break;
+
+      case TML_NODE_BUTTON:
+        ast_render_button(child, &attributes, interactive_items, &current_x, &current_y);
         break;
       
       case TML_NODE_NONE:

@@ -92,3 +92,33 @@ ast_render_input(
     *current_x = 0;
   }
 }
+
+void
+ast_render_button(
+  struct ast_t* const node,
+  struct ast_attributes_t* const attributes,
+  struct iarray_t* const interactive_items,
+  size_t* current_x,
+  size_t* current_y)
+{
+  // TODO: add this to iarray
+
+  move(*current_y, *current_x);
+
+  printw("(");
+  (*current_x)++;
+
+  if (node->body.length > 0)
+  {
+    printw("%s", node->body.content);
+    *current_x += node->body.length;
+  }
+  printw(")");
+  (*current_x)++;
+
+  if (attributes->is_newline)
+  {
+    (*current_y)++;
+    *current_x = 0;
+  }
+}
