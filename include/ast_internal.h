@@ -31,4 +31,12 @@ ast_render_input(
   struct iarray_t* const interactive_items,
   size_t* current_x,
   size_t* current_y);
+
+void
+ast_render_button(
+  struct ast_t* const node,
+  struct ast_attributes_t* const attributes,
+  struct iarray_t* const interactive_items,
+  size_t* current_x,
+  size_t* current_y);
 #endif

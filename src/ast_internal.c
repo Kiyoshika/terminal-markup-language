@@ -57,7 +57,7 @@ ast_render_input(
   if (node->contains_body)
     body_len = node->body.length;
 
-  iarray_add(interactive_items, node, *current_x + 1, *current_y, body_len + 1);
+  iarray_add(interactive_items, node, *current_x + 1, *current_y, body_len);
   move(*current_y, *current_x);
 
   printw("[");
@@ -84,6 +84,36 @@ ast_render_input(
   }
 
   printw("]");
+  (*current_x)++;
+
+  if (attributes->is_newline)
+  {
+    (*current_y)++;
+    *current_x = 0;
+  }
+}
+
+void
+ast_render_button(
+  struct ast_t* const node,
+  struct ast_attributes_t* const attributes,
+  struct iarray_t* const interactive_items,
+  size_t* current_x,
+  size_t* current_y)
+{
+  // TODO: add this to iarray
+
+  move(*current_y, *current_x);
+
+  printw("(");
+  (*current_x)++;
+
+  if (node->body.length > 0)
+  {
+    printw("%s", node->body.content);
+    *current_x += node->body.length;
+  }
+  printw(")");
   (*current_x)++;
 
   if (attributes->is_newline)

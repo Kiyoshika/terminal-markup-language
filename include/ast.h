@@ -9,7 +9,7 @@
 
 #include "colours.h"
 
-#define N_TOKEN_TYPES 4
+#define N_TOKEN_TYPES 5
 #define N_ATTRIBUTE_TYPES 8
 #define N_ATTRIBUTE_VALUES 11
 #define TML_TAG_NAME_LEN 21
@@ -26,6 +26,7 @@ enum ast_node_type_e
   TML_NODE_TEXT = (1 << 1u),
   TML_NODE_SPACE = (1 << 2u),
   TML_NODE_INPUT = (1 << 3u),
+  TML_NODE_BUTTON = (1 << 4u),
 };
 
 enum ast_attribute_type_e
@@ -126,7 +127,9 @@ ast_create(
 
 void
 ast_init_attributes(
-  struct ast_attributes_t* const attributes);
+  struct ast_attributes_t* const attributes,
+  const size_t fg,
+  const size_t bg);
 
 void
 ast_set_attributes_from_node(

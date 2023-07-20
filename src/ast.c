@@ -35,7 +35,7 @@ ast_create(
     case TML_NODE_ROOT:
     {
       node->contains_body = false;
-      node->allowed_children_nodes = TML_NODE_TEXT | TML_NODE_SPACE | TML_NODE_INPUT;
+      node->allowed_children_nodes = TML_NODE_TEXT | TML_NODE_SPACE | TML_NODE_INPUT | TML_NODE_BUTTON;
       break;
     }
     case TML_NODE_TEXT:
@@ -55,6 +55,11 @@ ast_create(
       node->contains_body = true;
       node->allowed_children_nodes = TML_NODE_NONE;
       break;
+    }
+    case TML_NODE_BUTTON:
+    {
+      node->contains_body = true;
+      node->allowed_children_nodes = TML_NODE_NONE;
     }
     case TML_NODE_NONE:
       break;
@@ -83,11 +88,12 @@ ast_create(
 
 void
 ast_init_attributes(
-  struct ast_attributes_t* const attributes)
+  struct ast_attributes_t* const attributes,
+  const size_t fg,
+  const size_t bg)
 {
-  attributes->fg = 0;
-  attributes->bg = 0;
-  attributes->change_colour = false;
+  attributes->fg = fg;
+  attributes->bg = bg;
   attributes->is_bold = false;
   attributes->is_newline = true;
   attributes->is_password = false;
@@ -104,14 +110,12 @@ ast_set_attributes_from_node(
     {
       case TML_ATTRIBUTE_FOREGROUND:
       {
-        attributes->change_colour = true;
         attributes->fg = ast_get_colour_id(node->attributes[attr].value);
         break;
       }
 
       case TML_ATTRIBUTE_BACKGROUND:
       {
-        attributes->change_colour = true;
         attributes->bg = ast_get_colour_id(node->attributes[attr].value);
         break;
       }
@@ -336,13 +340,10 @@ ast_draw(
 
     /* setup child attributes before rendering */
     struct ast_attributes_t attributes;
-    ast_init_attributes(&attributes);
+    ast_init_attributes(&attributes, fg, bg);
     ast_set_attributes_from_node(child, &attributes);
 
-    if (attributes.change_colour)
-      attrset(COLOR_PAIR(attributes.fg * n_colours + attributes.bg));
-    else
-      attrset(COLOR_PAIR(fg * n_colours + bg));
+    attrset(COLOR_PAIR(attributes.fg * n_colours + attributes.bg));
 
     /* render content */
     switch (child->type)
@@ -357,6 +358,10 @@ ast_draw(
       
       case TML_NODE_INPUT:
         ast_render_input(child, &attributes, interactive_items, &current_x, &current_y);
+        break;
+
+      case TML_NODE_BUTTON:
+        ast_render_button(child, &attributes, interactive_items, &current_x, &current_y);
         break;
       
       case TML_NODE_NONE:
@@ -429,61 +434,71 @@ ast_render(
 
   while ((current_key = getch()) != KEY_ESC)
   {
-    if (current_key == KEY_MOUSE)
+    switch (current_key)
     {
-      MEVENT event;
-      getmouse(&event);
-      mouse_x = event.x;
-      mouse_y = event.y;
-      clicked_item = iarray_find(interactive_items, mouse_x, mouse_y);
-      if (clicked_item)
+      case KEY_MOUSE:
       {
+        MEVENT event;
+        getmouse(&event);
+        mouse_x = event.x;
+        mouse_y = event.y;
+        clicked_item = iarray_find(interactive_items, mouse_x, mouse_y);
+        if (clicked_item)
+        {
         curs_set(1); // show cursor (focused on an element)
         move(mouse_y, mouse_x);
         refresh();
-      }
-      else
+        }
+        else
         curs_set(0); // hide cursor (unfocused on an element)
-    }
-    else if (current_key == KEY_BACKSPACE)
-    {
-      if (clicked_item
-          && clicked_item->node->type == TML_NODE_INPUT)
-      {
-        // do not backspace if the content is empty
-        if (clicked_item->node->body.length == 0)
-          continue;
-
-        // do not backspace if we're at the beginning of the input
-        if (mouse_x == clicked_item->x)
-          continue;
-
-        size_t position = mouse_x - clicked_item->x;
-        if (position > 0)
-          position--;
-        ast_remove_char_from_body(clicked_item->node, position);
-        clicked_item->width--;
-        iarray_shift_x_left(interactive_items, clicked_item->x, mouse_y, 1);
-        ast_draw(root, interactive_items);
-        mouse_x--;
-        move(mouse_y, mouse_x);
-        refresh();
+        break;
       }
-    }
-    else
-    {
-      if (clicked_item 
-          && clicked_item->node->type == TML_NODE_INPUT
-          && (isalnum(current_key) || ispunct(current_key) || isdigit(current_key) || current_key == ' '))
+
+      case KEY_BACKSPACE:
+      case 127:
+      case '\b':
       {
-        const size_t position = mouse_x - clicked_item->x;
-        ast_insert_char_to_body(clicked_item->node, (const char)current_key, position);
-        clicked_item->width++;
-        iarray_shift_x_right(interactive_items, clicked_item->x, mouse_y, 1);
-        ast_draw(root, interactive_items);
-        mouse_x++;
-        move(mouse_y, mouse_x);
-        refresh();
+        if (clicked_item
+            && clicked_item->node->type == TML_NODE_INPUT)
+        {
+          // do not backspace if the content is empty
+          if (clicked_item->node->body.length == 0)
+            continue;
+
+          // do not backspace if we're at the beginning of the input
+          if (mouse_x == clicked_item->x)
+            continue;
+
+          size_t position = mouse_x - clicked_item->x;
+          if (position > 0)
+            position--;
+          ast_remove_char_from_body(clicked_item->node, position);
+          clicked_item->width--;
+          iarray_shift_x_left(interactive_items, clicked_item->x, mouse_y, 1);
+          ast_draw(root, interactive_items);
+          mouse_x--;
+          move(mouse_y, mouse_x);
+          refresh();
+        }
+        break;
+      }
+
+      default:
+      {
+        if (clicked_item 
+            && clicked_item->node->type == TML_NODE_INPUT
+            && (isalnum(current_key) || ispunct(current_key) || isdigit(current_key) || current_key == ' '))
+        {
+          const size_t position = mouse_x - clicked_item->x;
+          ast_insert_char_to_body(clicked_item->node, (const char)current_key, position);
+          clicked_item->width++;
+          iarray_shift_x_right(interactive_items, clicked_item->x, mouse_y, 1);
+          ast_draw(root, interactive_items);
+          mouse_x++;
+          move(mouse_y, mouse_x);
+          refresh();
+        }
+        break;
       }
     }
   }

@@ -11,7 +11,8 @@ const char* tml_tag_names[N_TOKEN_TYPES] = {
   "tml",
   "text",
   "space",
-  "input"
+  "input",
+  "button"
 };
 
 // IMPORTANT: this must be ordered the same as
@@ -169,7 +170,7 @@ parser_get_next_expected_token(
     case TML_TOKEN_TEXT:
       return TML_TOKEN_SPACE | TML_TOKEN_TEXT | TML_TOKEN_EQUALS | TML_TOKEN_OPEN_TAG | TML_TOKEN_CLOSE_TAG | TML_TOKEN_NUMBER | TML_TOKEN_PUNCTUATION | TML_TOKEN_SLASH;
     case TML_TOKEN_CLOSE_TAG:
-      return TML_TOKEN_SPACE | TML_TOKEN_OPEN_TAG | TML_TOKEN_TEXT;
+      return TML_TOKEN_SPACE | TML_TOKEN_OPEN_TAG | TML_TOKEN_TEXT | TML_TOKEN_NUMBER;
     case TML_TOKEN_EQUALS:
       return TML_TOKEN_SPACE | TML_TOKEN_TEXT;
     case TML_TOKEN_SLASH:
