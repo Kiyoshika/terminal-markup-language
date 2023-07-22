@@ -1,11 +1,15 @@
 #include "filesystem.h"
 #include "parser.h"
+#include <signal.h>
 
 int
 main(
   int argc,
   char* argv[])
 {
+  // prevent Ctrl+C killing terminal - this is used to clear input boxes
+  signal(SIGINT, SIG_IGN);
+
   if (argc == 1)
   {
     printf("Please provide a file argument.\n");

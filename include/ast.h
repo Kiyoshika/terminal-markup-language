@@ -177,6 +177,10 @@ ast_remove_char_from_body(
   struct ast_t* const ast,
   const size_t position);
 
+void
+ast_clear_body(
+  struct ast_t* const ast);
+
 struct ast_attribute_pair_t*
 ast_get_attribute(
   const struct ast_t* const ast,
