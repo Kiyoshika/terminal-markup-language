@@ -7,8 +7,6 @@
 #include <stdint.h>
 #include <ncurses.h>
 
-#include "colours.h"
-
 #define N_TOKEN_TYPES 5
 #define N_ATTRIBUTE_TYPES 8
 #define N_ATTRIBUTE_VALUES 11
@@ -72,7 +70,7 @@ enum ast_attribute_value_e
 struct ast_attribute_pair_t
 {
   const enum ast_attribute_type_e type;
-  const enum ast_attribute_value_e value;
+  enum ast_attribute_value_e value;
   const char* custom_value;
 };
 
@@ -160,7 +158,9 @@ ast_free(
 void
 ast_draw(
   const struct ast_t* const root,
-  struct iarray_t* const interactive_items);
+  struct iarray_t* const interactive_items,
+  enum ast_attribute_value_e* root_fg,
+  enum ast_attribute_value_e* root_bg);
 
 void
 ast_render(
@@ -176,5 +176,14 @@ void
 ast_remove_char_from_body(
   struct ast_t* const ast,
   const size_t position);
+
+struct ast_attribute_pair_t*
+ast_get_attribute(
+  const struct ast_t* const ast,
+  const enum ast_attribute_type_e attribute_type);
+
+enum ast_attribute_value_e
+ast_get_inverse_colour(
+  const enum ast_attribute_value_e colour_attribute);
 
 #endif
