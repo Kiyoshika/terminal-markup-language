@@ -1,5 +1,5 @@
 # TML Specification (Terminal Markup Language)
-Version: 0.0.6 - 16 July 2023
+Version: 0.0.6 - 22 July 2023
 
 To see older versions of the spec, see the [TML Spec Archive](tmlspec-archive/)
 
@@ -186,6 +186,8 @@ The input box is notated with square brackets `[]` with the text appearing betwe
 Users can click anywhere in the text box (except the first opening bracket) and text will appear where the cursor is when typing.
 
 Clicking outside the text box will disable focus and prevent any more text from being written until refocused.
+
+Pressing `Ctrl + R` will clear ("reset") the input box, deleting all text inside it. 
 
 **Attributes:**
 * `callback` - function name to call when user submits. callback function must take a single `string` argument

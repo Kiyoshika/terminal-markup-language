@@ -542,11 +542,11 @@ ast_render(
           {
             ast_clear_body(clicked_item->node);
             iarray_shift_x_left(interactive_items, clicked_item->x, clicked_item->y, len);
+            clicked_item->width -= len;
             ast_draw(root, interactive_items, &root_fg, &root_bg);
             mouse_x = clicked_item->x;
             mouse_y = clicked_item->y;
             move(clicked_item->y, clicked_item->x);
-            refresh();
           }
         }
         break;
