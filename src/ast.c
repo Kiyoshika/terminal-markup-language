@@ -446,21 +446,17 @@ ast_render(
         clicked_item = iarray_find(interactive_items, mouse_x, mouse_y);
         if (clicked_item)
         {
-          if (clicked_item->node->type == TML_NODE_INPUT
-              && (isalnum(current_key) || ispunct(current_key) || isdigit(current_key) || current_key == ' '))
+          if (clicked_item->node->type == TML_NODE_INPUT)
           {
+            curs_set(1);
             const size_t position = mouse_x - clicked_item->x;
-            ast_insert_char_to_body(clicked_item->node, (const char)current_key, position);
-            clicked_item->width++;
-            iarray_shift_x_right(interactive_items, clicked_item->x, mouse_y, 1);
-            ast_draw(root, interactive_items);
-            mouse_x++;
             move(mouse_y, mouse_x);
             refresh();
           }
 
           else if (clicked_item->node->type == TML_NODE_BUTTON)
           {
+            curs_set(0);
             switch (event.bstate)
             {
               case BUTTON1_PRESSED:
@@ -494,12 +490,9 @@ ast_render(
               }
             }
           }
-          curs_set(1); // show cursor (focused on an element)
           move(mouse_y, mouse_x);
           refresh();
         }
-        else
-          curs_set(0); // hide cursor (unfocused on an element)
         break;
       }
 
@@ -526,6 +519,26 @@ ast_render(
           iarray_shift_x_left(interactive_items, clicked_item->x, mouse_y, 1);
           ast_draw(root, interactive_items);
           mouse_x--;
+          move(mouse_y, mouse_x);
+          refresh();
+        }
+        break;
+      }
+
+      /* any other key */
+      default:
+      {
+        if (clicked_item
+            &&clicked_item->node->type == TML_NODE_INPUT
+            && (isalnum(current_key) || ispunct(current_key) || isdigit(current_key) || current_key == ' '))
+        {
+          curs_set(1);
+          const size_t position = mouse_x - clicked_item->x;
+          ast_insert_char_to_body(clicked_item->node, (const char)current_key, position);
+          clicked_item->width++;
+          iarray_shift_x_right(interactive_items, clicked_item->x, mouse_y, 1);
+          ast_draw(root, interactive_items);
+          mouse_x++;
           move(mouse_y, mouse_x);
           refresh();
         }
