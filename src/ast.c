@@ -427,6 +427,7 @@ ast_render(
   cbreak();
   keypad(stdscr, TRUE);
   mousemask(ALL_MOUSE_EVENTS | REPORT_MOUSE_POSITION, &old);
+  mouseinterval(0);
 
   curs_set(0); // hide cursor (unfocused on an element)
 
