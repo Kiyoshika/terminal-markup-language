@@ -72,7 +72,7 @@ enum ast_attribute_value_e
 struct ast_attribute_pair_t
 {
   const enum ast_attribute_type_e type;
-  const enum ast_attribute_value_e value;
+  enum ast_attribute_value_e value;
   const char* custom_value;
 };
 
@@ -176,5 +176,10 @@ void
 ast_remove_char_from_body(
   struct ast_t* const ast,
   const size_t position);
+
+struct ast_attribute_pair_t*
+ast_get_attribute(
+  const struct ast_t* const ast,
+  const enum ast_attribute_type_e attribute_type);
 
 #endif

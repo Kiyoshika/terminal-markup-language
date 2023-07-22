@@ -445,12 +445,60 @@ ast_render(
         clicked_item = iarray_find(interactive_items, mouse_x, mouse_y);
         if (clicked_item)
         {
-        curs_set(1); // show cursor (focused on an element)
-        move(mouse_y, mouse_x);
-        refresh();
+          if (clicked_item->node->type == TML_NODE_INPUT
+              && (isalnum(current_key) || ispunct(current_key) || isdigit(current_key) || current_key == ' '))
+          {
+            const size_t position = mouse_x - clicked_item->x;
+            ast_insert_char_to_body(clicked_item->node, (const char)current_key, position);
+            clicked_item->width++;
+            iarray_shift_x_right(interactive_items, clicked_item->x, mouse_y, 1);
+            ast_draw(root, interactive_items);
+            mouse_x++;
+            move(mouse_y, mouse_x);
+            refresh();
+          }
+
+          else if (clicked_item->node->type == TML_NODE_BUTTON)
+          {
+            switch (event.bstate)
+            {
+              case BUTTON1_PRESSED:
+              {
+                struct ast_attribute_pair_t* bg = ast_get_attribute(clicked_item->node, TML_ATTRIBUTE_BACKGROUND);
+                if (!bg)
+                  bg->value = TML_ATTRIBUTE_VALUE_WHITE;
+                else
+                  bg->value = TML_ATTRIBUTE_VALUE_RED;
+
+                struct ast_attribute_pair_t* fg = ast_get_attribute(clicked_item->node, TML_ATTRIBUTE_FOREGROUND);
+                if (!fg)
+                  bg->value = TML_ATTRIBUTE_VALUE_WHITE;
+                else
+                  fg->value = TML_ATTRIBUTE_VALUE_GREEN;
+
+                ast_draw(root, interactive_items);
+                break;
+              }
+
+              case BUTTON1_RELEASED:
+              {
+                struct ast_attribute_pair_t* bg = ast_get_attribute(clicked_item->node, TML_ATTRIBUTE_BACKGROUND);
+                bg->value = TML_ATTRIBUTE_VALUE_BLACK;
+
+                struct ast_attribute_pair_t* fg = ast_get_attribute(clicked_item->node, TML_ATTRIBUTE_FOREGROUND);
+                fg->value = TML_ATTRIBUTE_VALUE_YELLOW;
+
+                ast_draw(root, interactive_items);
+                break;
+              }
+            }
+          }
+          curs_set(1); // show cursor (focused on an element)
+          move(mouse_y, mouse_x);
+          refresh();
         }
         else
-        curs_set(0); // hide cursor (unfocused on an element)
+          curs_set(0); // hide cursor (unfocused on an element)
         break;
       }
 
@@ -482,26 +530,21 @@ ast_render(
         }
         break;
       }
-
-      default:
-      {
-        if (clicked_item 
-            && clicked_item->node->type == TML_NODE_INPUT
-            && (isalnum(current_key) || ispunct(current_key) || isdigit(current_key) || current_key == ' '))
-        {
-          const size_t position = mouse_x - clicked_item->x;
-          ast_insert_char_to_body(clicked_item->node, (const char)current_key, position);
-          clicked_item->width++;
-          iarray_shift_x_right(interactive_items, clicked_item->x, mouse_y, 1);
-          ast_draw(root, interactive_items);
-          mouse_x++;
-          move(mouse_y, mouse_x);
-          refresh();
-        }
-        break;
-      }
     }
   }
   endwin();
   iarray_free(&interactive_items);
 }
+
+struct ast_attribute_pair_t*
+ast_get_attribute(
+  const struct ast_t* const ast,
+  const enum ast_attribute_type_e attribute_type)
+{
+  for (size_t i = 0; i < ast->n_attributes; ++i)
+    if (ast->attributes[i].type == attribute_type)
+      return &ast->attributes[i];
+
+  return NULL;
+}
+

@@ -101,8 +101,11 @@ ast_render_button(
   size_t* current_x,
   size_t* current_y)
 {
-  // TODO: add this to iarray
+  size_t body_len = 0;
+  if (node->contains_body)
+    body_len = node->body.length;
 
+  iarray_add(interactive_items, node, *current_x + 1, *current_y, body_len);
   move(*current_y, *current_x);
 
   printw("(");
