@@ -3,6 +3,12 @@
 #include "iarray.h"
 #include <ctype.h>
 
+#define CTRL_BACKSPACE (0x1f & 8)
+
+#define KEY_ESC 27
+#define KEY_BACKSPACE_2 8
+#define KEY_BACKSPACE_3 127
+
 struct ast_t*
 ast_create(
   const enum ast_node_type_e type,
@@ -418,7 +424,6 @@ ast_render(
   if (!interactive_items)
     return;
 
-  const int KEY_ESC = 27; // also technically ALT but we don't need that key
   int current_key = 0;
   mmask_t old;
   struct iarray_item_t* clicked_item = NULL;
@@ -456,7 +461,6 @@ ast_render(
           if (clicked_item->node->type == TML_NODE_INPUT)
           {
             curs_set(1);
-            const size_t position = mouse_x - clicked_item->x;
             move(mouse_y, mouse_x);
             refresh();
           }
@@ -499,8 +503,8 @@ ast_render(
       }
 
       case KEY_BACKSPACE:
-      case 127:
       case '\b':
+      case 127:
       {
         if (clicked_item
             && clicked_item->node->type == TML_NODE_INPUT)
@@ -523,6 +527,27 @@ ast_render(
           mouse_x--;
           move(mouse_y, mouse_x);
           refresh();
+        }
+        break;
+      }
+
+      /* ctrl + r */
+      case 'R' & 037:
+      {
+        if (clicked_item
+            && clicked_item->node->type == TML_NODE_INPUT)
+        {
+          size_t len = clicked_item->node->body.length;
+          if (len > 0)
+          {
+            ast_clear_body(clicked_item->node);
+            iarray_shift_x_left(interactive_items, clicked_item->x, clicked_item->y, len);
+            ast_draw(root, interactive_items, &root_fg, &root_bg);
+            mouse_x = clicked_item->x;
+            mouse_y = clicked_item->y;
+            move(clicked_item->y, clicked_item->x);
+            refresh();
+          }
         }
         break;
       }
@@ -603,4 +628,12 @@ ast_get_inverse_colour(
   }
 
   return TML_ATTRIBUTE_VALUE_NONE;
+}
+
+void
+ast_clear_body(
+  struct ast_t* const ast)
+{
+  memset(ast->body.content, 0, ast->body.length);
+  ast->body.length = 0;
 }
