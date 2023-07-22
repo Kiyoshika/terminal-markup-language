@@ -279,7 +279,9 @@ ast_get_colour_id(
 void
 ast_draw(
   const struct ast_t* const root,
-  struct iarray_t* const interactive_items)
+  struct iarray_t* const interactive_items,
+  enum ast_attribute_value_e* root_fg,
+  enum ast_attribute_value_e* root_bg)
 {
   clear();
   const size_t n_colours = 8;
@@ -311,10 +313,12 @@ ast_draw(
     {
       case TML_ATTRIBUTE_FOREGROUND:
         fg = ast_get_colour_id(root->attributes[i].value);
+        *root_fg = root->attributes[i].value;
         break;
 
       case TML_ATTRIBUTE_BACKGROUND:
         bg = ast_get_colour_id(root->attributes[i].value);
+        *root_bg = root->attributes[i].value;
         break;
 
       // no-ops, just here to prevent compiler warnings
@@ -431,7 +435,10 @@ ast_render(
 
   curs_set(0); // hide cursor (unfocused on an element)
 
-  ast_draw(root, interactive_items);
+  // get the new root fg/bg (if any). Otherwise NULL will be the default (white on black)
+  enum ast_attribute_value_e root_fg = TML_ATTRIBUTE_VALUE_WHITE;
+  enum ast_attribute_value_e root_bg = TML_ATTRIBUTE_VALUE_BLACK;
+  ast_draw(root, interactive_items, &root_fg, &root_bg);
 
   while ((current_key = getch()) != KEY_ESC)
   {
@@ -459,33 +466,26 @@ ast_render(
             curs_set(0);
             switch (event.bstate)
             {
+              case BUTTON1_RELEASED:
               case BUTTON1_PRESSED:
               {
                 struct ast_attribute_pair_t* bg = ast_get_attribute(clicked_item->node, TML_ATTRIBUTE_BACKGROUND);
                 if (!bg)
-                  bg->value = TML_ATTRIBUTE_VALUE_WHITE;
-                else
-                  bg->value = TML_ATTRIBUTE_VALUE_RED;
+                {
+                  ast_add_attribute(clicked_item->node, TML_ATTRIBUTE_BACKGROUND, root_bg, NULL);
+                  bg = &clicked_item->node->attributes[clicked_item->node->n_attributes - 1];
+                }
+                bg->value = ast_get_inverse_colour(bg->value);
 
                 struct ast_attribute_pair_t* fg = ast_get_attribute(clicked_item->node, TML_ATTRIBUTE_FOREGROUND);
                 if (!fg)
-                  bg->value = TML_ATTRIBUTE_VALUE_WHITE;
-                else
-                  fg->value = TML_ATTRIBUTE_VALUE_GREEN;
+                {
+                  ast_add_attribute(clicked_item->node, TML_ATTRIBUTE_FOREGROUND, root_fg, NULL);
+                  fg = &clicked_item->node->attributes[clicked_item->node->n_attributes - 1];
+                }
+                fg->value = ast_get_inverse_colour(fg->value);
 
-                ast_draw(root, interactive_items);
-                break;
-              }
-
-              case BUTTON1_RELEASED:
-              {
-                struct ast_attribute_pair_t* bg = ast_get_attribute(clicked_item->node, TML_ATTRIBUTE_BACKGROUND);
-                bg->value = TML_ATTRIBUTE_VALUE_BLACK;
-
-                struct ast_attribute_pair_t* fg = ast_get_attribute(clicked_item->node, TML_ATTRIBUTE_FOREGROUND);
-                fg->value = TML_ATTRIBUTE_VALUE_YELLOW;
-
-                ast_draw(root, interactive_items);
+                ast_draw(root, interactive_items, &root_fg, &root_bg);
                 break;
               }
             }
@@ -493,6 +493,8 @@ ast_render(
           move(mouse_y, mouse_x);
           refresh();
         }
+        else
+          curs_set(0);
         break;
       }
 
@@ -517,7 +519,7 @@ ast_render(
           ast_remove_char_from_body(clicked_item->node, position);
           clicked_item->width--;
           iarray_shift_x_left(interactive_items, clicked_item->x, mouse_y, 1);
-          ast_draw(root, interactive_items);
+          ast_draw(root, interactive_items, &root_fg, &root_bg);
           mouse_x--;
           move(mouse_y, mouse_x);
           refresh();
@@ -537,7 +539,7 @@ ast_render(
           ast_insert_char_to_body(clicked_item->node, (const char)current_key, position);
           clicked_item->width++;
           iarray_shift_x_right(interactive_items, clicked_item->x, mouse_y, 1);
-          ast_draw(root, interactive_items);
+          ast_draw(root, interactive_items, &root_fg, &root_bg);
           mouse_x++;
           move(mouse_y, mouse_x);
           refresh();
@@ -562,3 +564,43 @@ ast_get_attribute(
   return NULL;
 }
 
+enum ast_attribute_value_e
+ast_get_inverse_colour(
+  const enum ast_attribute_value_e colour_attribute)
+{
+  switch (colour_attribute)
+  {
+    case TML_ATTRIBUTE_VALUE_WHITE:
+      return TML_ATTRIBUTE_VALUE_BLACK;
+
+    case TML_ATTRIBUTE_VALUE_BLACK:
+      return TML_ATTRIBUTE_VALUE_WHITE;
+
+    case TML_ATTRIBUTE_VALUE_RED:
+      return TML_ATTRIBUTE_VALUE_CYAN;
+
+    case TML_ATTRIBUTE_VALUE_BLUE:
+      return TML_ATTRIBUTE_VALUE_YELLOW;
+
+    case TML_ATTRIBUTE_VALUE_YELLOW:
+      return TML_ATTRIBUTE_VALUE_BLUE;
+
+    case TML_ATTRIBUTE_VALUE_CYAN:
+      return TML_ATTRIBUTE_VALUE_RED;
+
+    case TML_ATTRIBUTE_VALUE_GREEN:
+      return TML_ATTRIBUTE_VALUE_MAGENTA;
+
+    case TML_ATTRIBUTE_VALUE_MAGENTA:
+      return TML_ATTRIBUTE_VALUE_GREEN;
+
+    // non-colour attributes
+    case TML_ATTRIBUTE_VALUE_NONE:
+    case TML_ATTRIBUTE_VALUE_TRUE:
+    case TML_ATTRIBUTE_VALUE_FALSE:
+    case TML_ATTRIBUTE_VALUE_CUSTOM:
+      return TML_ATTRIBUTE_VALUE_NONE;
+  }
+
+  return TML_ATTRIBUTE_VALUE_NONE;
+}
