@@ -1,5 +1,5 @@
 # TML Specification (Terminal Markup Language)
-Version: 0.0.7 - 23 July 2023
+Version: 0.0.6 - 22 July 2023
 
 To see older versions of the spec, see the [TML Spec Archive](tmlspec-archive/)
 
@@ -10,7 +10,7 @@ Interactable items (input, buttons, etc.) can be clicked on with the mouse.
 ## Overview
 This is a markup language similar to HTML to create elements to be rendered onto a terminal screen.
 
-Press the `ESC` key to properly exit the renderer (`Ctrl+C` is disabled as of `v0.0.7`)
+Press the `ESC` key to properly exit the renderer (using `Ctrl+C` may not properly cleanup resources and can lead to buggy behaviour.)
 
 A bit of terminology: tags (`<tag>`) are sometimes referred to as nodes, especialy in error messages. Node/tag are interchangeable.
 
@@ -29,7 +29,7 @@ The general structure of a tag is:
 ```
 
 Where
-* `tagname` is the name of the tag. It must only contain (lowercase or camelCase) ASCII letters with no spaces or other special characters (e.g., hyphens)
+* `tagname` is the name of the tag. It must only contain lowercase ASCII letters with no spaces or other special characters (e.g., hyphens)
 * `attr1`/`attr2` is the name of an attribute. It must only contain lowercase ASCII letters with no spaces or other special characters (e.g., hypens)
 * `value1`/`value2` is the value of an attribute. It must only contain lowercase ASCII letters with no spaces or other special characters (e.g., hyphens)
 
@@ -82,7 +82,6 @@ Acceptable colours used in attributes such as `fg`, `bg`, etc.:
 * [Text](#text)
 * [Space](#space)
 * [Input](#input)
-* [Button](#button)
 * [Planned Future Tags](#planned-future-tags)
 * [Planned Future Attributes](#planned-future-attributes)
 
@@ -135,10 +134,6 @@ This creates a white terminal where all nodes will have a red foreground by defa
 * `newline` - determine whether or not to add a newline after the text is written
   * default value: `true`
 * `id` - An ID that can be referenced in callback functions
-* `marginLeft` - apply padding to the left of the element
-  * default value: `0`
-* `marginRight` - apply padding to the right of the element
-  * default value: `0`
 
 NOTE: you can use this tag as a newline by using the shorthand `<text/>` which only prints a newline
 
@@ -164,22 +159,10 @@ hello there
 how are you
 ```
 
-Or you can use margins to avoid an extra tag:
-```
-<tml>
-  <text newline=false marginRight=1>hello</text>
-  <text>there</text>
-</tml>
-```
-
-Which will be rendered the same as above.
-
 ## Space
 **Tag Name:** `<space>`
 
 **Description:** Inserts a single space character on the current line, commonly used with the [text tag](#text). Note that you can use the short-hand notation with this tag: `<space/>` is equivalent to `<space></space>` since it does not require a body.
-
-This tag was implemented prior to `v0.0.7` which introduced `marginLeft` and `marginRight` but still keeping for compatability reasons.
 
 **Attributes:** None
 
@@ -212,16 +195,14 @@ Pressing `Ctrl + R` will clear ("reset") the input box, deleting all text inside
   * default value: same as parent node
 * `bg` - the background colour of the input box
   * default value: same as parent node
+* `minLength` - min length of the buffer; prevents user from submitting until this length is reached
+  * default value: `0`
 * `maxLength` - max length of the buffer; prevents user from inputting more characters
   * default value: `25`
 * `password` - mask the input with `*` used for password or secret inputs
   * default value: `false`
 * `newline` - determine whether to add a newline after the input box
   * default value: `true`
-* `marginLeft` - apply padding to the left of the element
-  * default value: `0`
-* `marginRight` - apply padding to the right of the element
-  * default value: `0`
 
 **Examples:**
 
@@ -238,10 +219,10 @@ NOTE: as of the version of this spec, the scripting language is not yet designed
 
   <text/>
 
-  <text marginRight=1 newline=false>Enter First Name:</text>
+  <text newline=false>Enter First Name:</text><space/>
   <input callback=setFirstName/>
 
-  <text marginRight=1 newline=false>Enter Last Name:</text>
+  <text newline=false>Enter Last Name:</text><space/>
   <input callback=setLastName/>
 
   <script>
@@ -269,66 +250,9 @@ Enter First Name: [Zach]
 Enter Last Name: [Weaver]
 ```
 
-## Button 
-**Tag Name:** `<button>`
-
-**Description:** A clickable button to trigger a callback function. 
-
-The body of the button (button's name) will be wrapped around parenthesis. So `<button>Submit</button>` will be rendered as `(Submit)`. It's recommended to set different fg/bg colours to make it more clear to the user that it's a button and not general text. 
-
-When the button is pressed, the foreground/background colours are inverted on mouse down, and changed back on mouse up to visually indicate to the user that the button was pressed.
-
-**Attributes:**
-* `callback` - function name to call when user submits. callback function must take a single `string` argument
-* `fg` - the foreground colour of the input box and text inside it
-  * default value: same as parent node
-* `bg` - the background colour of the input box
-  * default value: same as parent node
-* `newline` - determine whether to add a newline after the input box
-  * default value: `true`
-* `marginLeft` - apply padding to the left of the element
-  * default value: `0`
-* `marginRight` - apply padding to the right of the element
-  * default value: `0`
-
-**Examples:**
-
-NOTE: as of the version of this spec, the scripting language is not yet designed; below is only a rough prototype of what it *might* look like.
-```
-<tml>
-  <text marginLeft=3 marginRight=1 newline=false>Number:</text>
-  <input id=num1/>
-
-  <text marginLeft=3 marginRight=1 newline=false>Number:</text>
-  <input id=num2/>
-
-  <button marginLeft=6 bg=white fg=black callback=add(num1.getTextAsInt(), num2.getTextAsInt())>Add</button>
-
-  <text marginLeft=3 marginRight=1 newline=false>Result:</text>
-  <text id=result/>
-
-  <script>
-    // this is assuming no conversion problems from getTextAsInt()
-    function add(int num1, int num2) {
-      int res = num1 + num2;
-      string resultStr = res.toString();
-      result.setText(resultStr);
-    }
-  </script>
-</tml>
-```
-
-Would be rendered as (after typing in inputs and clicking the `(Add)` button):
-
-```text
-   Number: [12]
-   Number: [25]
-      (Add)
-   Result: 37
-```
-
 ## Planned Future Tags
 Some tags that are planned in future iterations, these are not yet documented/fully scoped out yet. Note that this is a very tentative list and some may get scrapped/added.
+* `<button>`
 * `<radiobutton>`
 * `<checkbox>`
 * `<grid>`
@@ -338,5 +262,6 @@ Some tags that are planned in future iterations, these are not yet documented/fu
 
 ## Planned Future Attributes
 Some future attributes that are planned:
+* `marginLeft` - add N space characters to the left of the current tag
+* `marginRight` - add N space characters to the right of the current tag
 * `hidden` - toggle whether to display the current tag or not
-* `static` - hold an element inplace to prevent it from shifting left/right
