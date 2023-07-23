@@ -92,7 +92,7 @@ _add_tag_value(
   }
 
   enum ast_attribute_type_e attribute_type = parser_get_attribute_type(context);
-  context->allowed_attribute_values = _parser_get_allowed_attribute_values(attribute_type);
+  context->allowed_attribute_values = ast_get_allowed_attribute_values(attribute_type);
 
   if (attribute_type == TML_ATTRIBUTE_NULL)
   {
@@ -107,7 +107,7 @@ _add_tag_value(
     return false;
   }
 
-  if (!ast_add_attribute(*current_node, attribute_type, attribute_value, NULL))
+  if (!ast_add_attribute(*current_node, attribute_type, attribute_value, context->attribute_value))
   {
     tml_error_node_failure(err_msg);
     return false;
@@ -253,7 +253,7 @@ _parser_actions_space(
     case TML_STATE_PARSING_ATTRIBUTE_VALUE:
     {
       enum ast_attribute_type_e attribute_type = parser_get_attribute_type(context);
-      context->allowed_attribute_values = _parser_get_allowed_attribute_values(attribute_type);
+      context->allowed_attribute_values = ast_get_allowed_attribute_values(attribute_type);
 
       if (attribute_type == TML_ATTRIBUTE_NULL)
       {
@@ -274,7 +274,7 @@ _parser_actions_space(
         return false;
       }
 
-      if (!ast_add_attribute(*current_node, attribute_type, attribute_value, NULL))
+      if (!ast_add_attribute(*current_node, attribute_type, attribute_value, context->attribute_value))
       {
         tml_error_node_failure(err_msg);
         return false;

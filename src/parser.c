@@ -25,7 +25,9 @@ const char* tml_attribute_names[N_ATTRIBUTE_TYPES] = {
   "callback",
   "minLength",
   "maxLength",
-  "password"
+  "password",
+  "marginLeft",
+  "marginRight"
 };
 
 // IMPORTANT: this must be ordered the same as
@@ -41,7 +43,8 @@ const char* tml_attribute_values[N_ATTRIBUTE_VALUES] = {
   "magenta",
   "true",
   "false",
-  "custom"
+  "int", // placeholder text, not actually used 
+  "custom" // placeholder text, not actually used 
 };
 
 bool
@@ -103,16 +106,25 @@ enum ast_attribute_value_e
 parser_get_attribute_value(
   const struct parse_context_t* const context)
 {
-  // TODO: move this to a function when we have more of these.
-  // there will be another check when "id" attribute is introduced
-  if (strcmp(context->attribute_name, "callback") == 0)
-    return TML_ATTRIBUTE_VALUE_CUSTOM;
-
   for (size_t i = 0; i < (size_t)N_ATTRIBUTE_VALUES; ++i)
     if (strcmp(tml_attribute_values[i], context->attribute_value) == 0)
       return (1 << i);
 
-  return TML_ATTRIBUTE_VALUE_NONE;
+  // WARNING: this does not check of over/underflow errors,
+  // but realistically should not occur in "real" code.
+  // (what're you gonna do, make a margin of 3 million pixels?)
+  char* endptr = NULL;
+  strtoul(context->attribute_value, &endptr, 10);
+  if (strlen(endptr) == 0)
+  {
+    for (size_t i = 0; i < strlen(context->attribute_value); ++i)
+      if (context->attribute_value[i] == '.')
+        return TML_ATTRIBUTE_VALUE_NONE;
+
+    return TML_ATTRIBUTE_VALUE_INT;
+  }
+
+  return TML_ATTRIBUTE_VALUE_CUSTOM;
 }
 
 enum ast_attribute_type_e
@@ -167,20 +179,19 @@ parser_get_next_expected_token(
   {
     case TML_TOKEN_OPEN_TAG:
       return TML_TOKEN_SPACE | TML_TOKEN_TEXT | TML_TOKEN_SLASH;
+    case TML_TOKEN_NUMBER:
     case TML_TOKEN_TEXT:
       return TML_TOKEN_SPACE | TML_TOKEN_TEXT | TML_TOKEN_EQUALS | TML_TOKEN_OPEN_TAG | TML_TOKEN_CLOSE_TAG | TML_TOKEN_NUMBER | TML_TOKEN_PUNCTUATION | TML_TOKEN_SLASH;
     case TML_TOKEN_CLOSE_TAG:
       return TML_TOKEN_SPACE | TML_TOKEN_OPEN_TAG | TML_TOKEN_TEXT | TML_TOKEN_NUMBER;
     case TML_TOKEN_EQUALS:
-      return TML_TOKEN_SPACE | TML_TOKEN_TEXT;
+      return TML_TOKEN_SPACE | TML_TOKEN_TEXT | TML_TOKEN_NUMBER;
     case TML_TOKEN_SLASH:
       return TML_TOKEN_SPACE | TML_TOKEN_TEXT | TML_TOKEN_CLOSE_TAG;
     case TML_TOKEN_NULL:
       return TML_TOKEN_SPACE | TML_TOKEN_NULL;
     case TML_TOKEN_SPACE:
       return ~0u; // any token
-    case TML_TOKEN_NUMBER:
-      return TML_TOKEN_SPACE | TML_TOKEN_TEXT | TML_TOKEN_EQUALS | TML_TOKEN_OPEN_TAG | TML_TOKEN_CLOSE_TAG | TML_TOKEN_NUMBER | TML_TOKEN_PUNCTUATION;
     case TML_TOKEN_PUNCTUATION:
       return TML_TOKEN_SPACE | TML_TOKEN_TEXT | TML_TOKEN_EQUALS | TML_TOKEN_OPEN_TAG | TML_TOKEN_CLOSE_TAG | TML_TOKEN_NUMBER | TML_TOKEN_PUNCTUATION;
   }

@@ -103,6 +103,8 @@ ast_init_attributes(
   attributes->is_bold = false;
   attributes->is_newline = true;
   attributes->is_password = false;
+  attributes->margin_left = 0;
+  attributes->margin_right = 0;
 }
 
 void
@@ -135,6 +137,18 @@ ast_set_attributes_from_node(
       case TML_ATTRIBUTE_PASSWORD:
         attributes->is_password = node->attributes[attr].value == TML_ATTRIBUTE_VALUE_TRUE;
         break;
+      case TML_ATTRIBUTE_MARGINLEFT:
+      {
+        char* endptr = NULL;
+        attributes->margin_left = strtoul(node->attributes[attr].custom_value, &endptr, 10);
+        break;
+      }
+      case TML_ATTRIBUTE_MARGINRIGHT:
+      {
+        char* endptr = NULL;
+        attributes->margin_right = strtoul(node->attributes[attr].custom_value, &endptr, 10);
+        break;
+      }
       case TML_ATTRIBUTE_NULL:
         break;
     }
@@ -148,11 +162,17 @@ ast_add_attribute(
   const enum ast_attribute_value_e value,
   const char* custom_value)
 {
+
+  enum ast_attribute_value_e has_custom_value = TML_ATTRIBUTE_VALUE_INT | TML_ATTRIBUTE_VALUE_CUSTOM;
+
   struct ast_attribute_pair_t attribute = {
     .type = type,
     .value = value,
-    .custom_value = custom_value
+    .custom_value = {0} 
   };
+
+  if (value & has_custom_value)
+    strncat(attribute.custom_value, custom_value, (size_t)TML_ATTRIBUTE_VALUE_LEN);
 
   memcpy(&node->attributes[node->n_attributes++], &attribute, sizeof(attribute));
   
@@ -276,6 +296,7 @@ ast_get_colour_id(
     case TML_ATTRIBUTE_VALUE_FALSE:
     case TML_ATTRIBUTE_VALUE_NONE:
     case TML_ATTRIBUTE_VALUE_CUSTOM:
+    case TML_ATTRIBUTE_VALUE_INT:
       return 0;
   }
 
@@ -335,6 +356,8 @@ ast_draw(
       case TML_ATTRIBUTE_MAXLENGTH:
       case TML_ATTRIBUTE_CALLBACK:
       case TML_ATTRIBUTE_PASSWORD:
+      case TML_ATTRIBUTE_MARGINLEFT:
+      case TML_ATTRIBUTE_MARGINRIGHT:
         break;
     }
   }
@@ -636,4 +659,47 @@ ast_clear_body(
 {
   memset(ast->body.content, 0, ast->body.length);
   ast->body.length = 0;
+}
+
+uint64_t
+ast_get_allowed_attribute_values(
+  const enum ast_attribute_type_e type)
+{
+  switch (type)
+  {
+    case TML_ATTRIBUTE_FOREGROUND:
+    case TML_ATTRIBUTE_BACKGROUND:
+    {
+      return TML_ATTRIBUTE_VALUE_WHITE
+           | TML_ATTRIBUTE_VALUE_BLACK
+           | TML_ATTRIBUTE_VALUE_RED
+           | TML_ATTRIBUTE_VALUE_BLUE
+           | TML_ATTRIBUTE_VALUE_YELLOW
+           | TML_ATTRIBUTE_VALUE_CYAN
+           | TML_ATTRIBUTE_VALUE_GREEN
+           | TML_ATTRIBUTE_VALUE_MAGENTA;
+    }
+
+    case TML_ATTRIBUTE_NEWLINE:
+    case TML_ATTRIBUTE_BOLD:
+    case TML_ATTRIBUTE_PASSWORD:
+    {
+      return TML_ATTRIBUTE_VALUE_TRUE
+           | TML_ATTRIBUTE_VALUE_FALSE;
+    }
+
+    case TML_ATTRIBUTE_MINLENGTH:
+    case TML_ATTRIBUTE_MAXLENGTH:
+    case TML_ATTRIBUTE_MARGINLEFT:
+    case TML_ATTRIBUTE_MARGINRIGHT:
+      return TML_ATTRIBUTE_VALUE_INT;
+
+    case TML_ATTRIBUTE_CALLBACK:
+      return TML_ATTRIBUTE_VALUE_CUSTOM;
+
+    case TML_ATTRIBUTE_NULL:
+      return TML_ATTRIBUTE_VALUE_NONE;
+  }
+
+  return TML_ATTRIBUTE_VALUE_NONE;
 }

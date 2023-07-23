@@ -8,8 +8,8 @@
 #include <ncurses.h>
 
 #define N_TOKEN_TYPES 5
-#define N_ATTRIBUTE_TYPES 8
-#define N_ATTRIBUTE_VALUES 11
+#define N_ATTRIBUTE_TYPES 10
+#define N_ATTRIBUTE_VALUES 12
 #define TML_TAG_NAME_LEN 21
 #define TML_ATTRIBUTE_NAME_LEN 21
 #define TML_ATTRIBUTE_VALUE_LEN 21
@@ -46,6 +46,10 @@ enum ast_attribute_type_e
   TML_ATTRIBUTE_MAXLENGTH = (1 << 6u),
   // password=
   TML_ATTRIBUTE_PASSWORD = (1 << 7u),
+  // marginLeft=
+  TML_ATTRIBUTE_MARGINLEFT = (1 << 8u),
+  // marginRight=
+  TML_ATTRIBUTE_MARGINRIGHT = (1 << 9u),
 };
 
 enum ast_attribute_value_e
@@ -63,15 +67,17 @@ enum ast_attribute_value_e
   // booleans
   TML_ATTRIBUTE_VALUE_TRUE = (1 << 8u),
   TML_ATTRIBUTE_VALUE_FALSE = (1 << 9u),
-  // custom value (e.g., id or callback text)
-  TML_ATTRIBUTE_VALUE_CUSTOM = (1 << 10u),
+  // integer value 
+  TML_ATTRIBUTE_VALUE_INT = (1 << 10u),
+  // custom value (anything that doesn't match above)
+  TML_ATTRIBUTE_VALUE_CUSTOM = (1 << 11u),
 };
 
 struct ast_attribute_pair_t
 {
   const enum ast_attribute_type_e type;
   enum ast_attribute_value_e value;
-  const char* custom_value;
+  char custom_value[TML_ATTRIBUTE_VALUE_LEN];
 };
 
 struct ast_string_body_t
@@ -91,6 +97,8 @@ struct ast_attributes_t
   bool is_bold;
   bool is_password;
   bool is_multiline;
+  uint32_t margin_left;
+  uint32_t margin_right;
 };
 
 struct ast_t
@@ -189,5 +197,9 @@ ast_get_attribute(
 enum ast_attribute_value_e
 ast_get_inverse_colour(
   const enum ast_attribute_value_e colour_attribute);
+
+uint64_t
+ast_get_allowed_attribute_values(
+  const enum ast_attribute_type_e type);
 
 #endif
