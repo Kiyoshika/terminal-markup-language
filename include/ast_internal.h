@@ -6,6 +6,7 @@
 //forward declarations
 struct ast_t;
 struct ast_attributes_t;
+struct ast_colours_t;
 struct iarray_t;
 
 void
@@ -14,7 +15,8 @@ ast_render_text(
   struct ast_attributes_t* const attributes,
   struct iarray_t* const interactive_items,
   size_t* current_x,
-  size_t* current_y);
+  size_t* current_y,
+  const struct ast_colours_t* const root_colours);
 
 void
 ast_render_space(
@@ -22,7 +24,8 @@ ast_render_space(
   struct ast_attributes_t* const attributes,
   struct iarray_t* const interactive_items,
   size_t* current_x,
-  size_t* current_y);
+  size_t* current_y,
+  const struct ast_colours_t* const root_colours);
 
 void
 ast_render_input(
@@ -30,7 +33,8 @@ ast_render_input(
   struct ast_attributes_t* const attributes,
   struct iarray_t* const interactive_items,
   size_t* current_x,
-  size_t* current_y);
+  size_t* current_y,
+  const struct ast_colours_t* const root_colours);
 
 void
 ast_render_button(
@@ -38,5 +42,6 @@ ast_render_button(
   struct ast_attributes_t* const attributes,
   struct iarray_t* const interactive_items,
   size_t* current_x,
-  size_t* current_y);
+  size_t* current_y,
+  const struct ast_colours_t* const root_colours);
 #endif

@@ -367,6 +367,8 @@ ast_draw(
   wbkgd(stdscr, COLOR_PAIR(fg * n_colours + bg));
   attroff(A_BOLD);
 
+  
+
   for (size_t i = 0; i < root->n_children; ++i)
   {
     struct ast_t* child = root->children[i];
@@ -378,23 +380,31 @@ ast_draw(
 
     attrset(COLOR_PAIR(attributes.fg * n_colours + attributes.bg));
 
+    struct ast_colours_t colours = {
+      .root_fg = fg,
+      .root_bg = bg,
+      .node_fg = attributes.fg,
+      .node_bg = attributes.bg,
+      .n_colours = n_colours
+    };
+
     /* render content */
     switch (child->type)
     {
       case TML_NODE_TEXT:
-        ast_render_text(child, &attributes, interactive_items, &current_x, &current_y);
+        ast_render_text(child, &attributes, interactive_items, &current_x, &current_y, &colours);
         break;
 
       case TML_NODE_SPACE:
-        ast_render_space(child, &attributes, interactive_items, &current_x, &current_y);
+        ast_render_space(child, &attributes, interactive_items, &current_x, &current_y, &colours);
         break;
       
       case TML_NODE_INPUT:
-        ast_render_input(child, &attributes, interactive_items, &current_x, &current_y);
+        ast_render_input(child, &attributes, interactive_items, &current_x, &current_y, &colours);
         break;
 
       case TML_NODE_BUTTON:
-        ast_render_button(child, &attributes, interactive_items, &current_x, &current_y);
+        ast_render_button(child, &attributes, interactive_items, &current_x, &current_y, &colours);
         break;
       
       case TML_NODE_NONE:

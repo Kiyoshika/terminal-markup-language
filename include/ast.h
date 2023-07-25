@@ -101,6 +101,15 @@ struct ast_attributes_t
   uint32_t margin_right;
 };
 
+struct ast_colours_t
+{
+  size_t root_fg;
+  size_t root_bg;
+  size_t node_fg;
+  size_t node_bg;
+  size_t n_colours;
+};
+
 struct ast_t
 {
   enum ast_node_type_e type;
