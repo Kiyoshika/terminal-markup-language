@@ -5,12 +5,20 @@
 static void
 _apply_margin(
   const uint32_t margin,
-  size_t* current_x)
+  size_t* current_x,
+  const struct ast_colours_t* const colours)
 {
+  // do not apply node-specific colours on margin,
+  // use the root node's colours
+  attrset(COLOR_PAIR(colours->root_fg * colours->n_colours + colours->root_bg));
+
   if (margin > 0)
     for (uint32_t i = 0; i < margin; ++i)
       printw(" ");
   (*current_x) += margin;
+
+  // reset back to node-specific colours
+  attrset(COLOR_PAIR(colours->node_fg * colours->n_colours + colours->node_bg));
 }
 
 void
@@ -19,11 +27,12 @@ ast_render_text(
   struct ast_attributes_t* const attributes,
   struct iarray_t* const interactive_items,
   size_t* current_x,
-  size_t* current_y)
+  size_t* current_y,
+  const struct ast_colours_t* const colours)
 {
   (void)interactive_items;
 
-  _apply_margin(attributes->margin_left, current_x);
+  _apply_margin(attributes->margin_left, current_x, colours);
   move(*current_y, *current_x);
   refresh();
 
@@ -41,7 +50,7 @@ ast_render_text(
   else
     *current_x += node->body.length;
 
-  _apply_margin(attributes->margin_right, current_x);
+  _apply_margin(attributes->margin_right, current_x, colours);
   move(*current_y, *current_x);
 }
 
@@ -51,7 +60,8 @@ ast_render_space(
   struct ast_attributes_t* const attributes,
   struct iarray_t* const interactive_items,
   size_t* current_x,
-  size_t* current_y)
+  size_t* current_y,
+  const struct ast_colours_t* const colours)
 {
   (void)node;
   (void)attributes;
@@ -68,9 +78,10 @@ ast_render_input(
   struct ast_attributes_t* const attributes,
   struct iarray_t* const interactive_items,
   size_t* current_x,
-  size_t* current_y)
+  size_t* current_y,
+  const struct ast_colours_t* const colours)
 {
-  _apply_margin(attributes->margin_left, current_x);
+  _apply_margin(attributes->margin_left, current_x, colours);
   move(*current_y, *current_x);
 
   size_t body_len = 0;
@@ -112,7 +123,7 @@ ast_render_input(
     *current_x = 0;
   }
 
-  _apply_margin(attributes->margin_right, current_x);
+  _apply_margin(attributes->margin_right, current_x, colours);
   move(*current_y, *current_x);
 }
 
@@ -122,9 +133,10 @@ ast_render_button(
   struct ast_attributes_t* const attributes,
   struct iarray_t* const interactive_items,
   size_t* current_x,
-  size_t* current_y)
+  size_t* current_y,
+  const struct ast_colours_t* const colours)
 {
-  _apply_margin(attributes->margin_left, current_x);
+  _apply_margin(attributes->margin_left, current_x, colours);
   move(*current_y, *current_x);
 
   size_t body_len = 0;
@@ -151,6 +163,6 @@ ast_render_button(
     *current_x = 0;
   }
 
-  _apply_margin(attributes->margin_right, current_x);
+  _apply_margin(attributes->margin_right, current_x, colours);
   move(*current_y, *current_x);
 }
