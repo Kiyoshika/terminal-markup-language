@@ -1,5 +1,5 @@
 # TML Specification (Terminal Markup Language)
-Version: 0.0.7 - 23 July 2023
+Version: 0.0.7 - 24 July 2023
 
 To see older versions of the spec, see the [TML Spec Archive](tmlspec-archive/)
 
@@ -202,6 +202,8 @@ The input box is notated with square brackets `[]` with the text appearing betwe
 
 Users can click anywhere in the text box (except the first opening bracket) and text will appear where the cursor is when typing.
 
+Users can also use the left/right arrow keys while focused in the input box to move the cursor left/right.
+
 Clicking outside the text box will disable focus and prevent any more text from being written until refocused.
 
 Pressing `Ctrl + R` will clear ("reset") the input box, deleting all text inside it. 
@@ -339,4 +341,3 @@ Some tags that are planned in future iterations, these are not yet documented/fu
 ## Planned Future Attributes
 Some future attributes that are planned:
 * `hidden` - toggle whether to display the current tag or not
-* `static` - hold an element inplace to prevent it from shifting left/right
