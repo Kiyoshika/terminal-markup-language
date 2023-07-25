@@ -66,6 +66,7 @@ ast_render_space(
   (void)node;
   (void)attributes;
   (void)interactive_items;
+  (void)colours;
 
   move(*current_y, *current_x);
   printw(" ");
@@ -88,11 +89,16 @@ ast_render_input(
   if (node->contains_body)
     body_len = node->body.length;
 
-  iarray_add(interactive_items, node, *current_x + 1, *current_y, body_len);
+  if (body_len > attributes->fixed_width)
+    body_len = attributes->fixed_width;
+
+  iarray_add(interactive_items, node, *current_x + 1, *current_y, attributes->fixed_width);
   move(*current_y, *current_x);
 
   printw("[");
   (*current_x)++;
+
+  size_t start_x = *current_x;
 
   if (body_len > 0)
   {
@@ -109,10 +115,17 @@ ast_render_input(
       free(tmp);
     }
     else
-      printw("%s", node->body.content);
+    {
+      for (size_t i = 0; i < body_len; ++i)
+        printw("%c", node->body.content[i]);
+    }
 
     *current_x += body_len; 
   }
+
+  size_t remaining_space = attributes->fixed_width - (*current_x - start_x);
+  for (size_t i = 0; i < remaining_space; ++i)
+    printw(" ");
 
   printw("]");
   (*current_x)++;

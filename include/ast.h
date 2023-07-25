@@ -7,8 +7,10 @@
 #include <stdint.h>
 #include <ncurses.h>
 
+// NOTE: N_TOKEN/ATTRIBUTE/VALUE TYPES do NOT include the NONE/NULL node in their counts!
+
 #define N_TOKEN_TYPES 5
-#define N_ATTRIBUTE_TYPES 10
+#define N_ATTRIBUTE_TYPES 9
 #define N_ATTRIBUTE_VALUES 12
 #define TML_TAG_NAME_LEN 21
 #define TML_ATTRIBUTE_NAME_LEN 21
@@ -40,16 +42,14 @@ enum ast_attribute_type_e
   TML_ATTRIBUTE_BOLD = (1 << 3u),
   // callback=
   TML_ATTRIBUTE_CALLBACK = (1 << 4u),
-  // minLength=
-  TML_ATTRIBUTE_MINLENGTH = (1 << 5u),
-  // maxLength=
-  TML_ATTRIBUTE_MAXLENGTH = (1 << 6u),
   // password=
-  TML_ATTRIBUTE_PASSWORD = (1 << 7u),
+  TML_ATTRIBUTE_PASSWORD = (1 << 5u),
   // marginLeft=
-  TML_ATTRIBUTE_MARGINLEFT = (1 << 8u),
+  TML_ATTRIBUTE_MARGINLEFT = (1 << 6u),
   // marginRight=
-  TML_ATTRIBUTE_MARGINRIGHT = (1 << 9u),
+  TML_ATTRIBUTE_MARGINRIGHT = (1 << 7u),
+  // fixedWidth=
+  TML_ATTRIBUTE_FIXEDWIDTH = (1 << 8u),
 };
 
 enum ast_attribute_value_e
@@ -99,6 +99,7 @@ struct ast_attributes_t
   bool is_multiline;
   uint32_t margin_left;
   uint32_t margin_right;
+  uint32_t fixed_width;
 };
 
 struct ast_colours_t

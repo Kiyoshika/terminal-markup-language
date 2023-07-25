@@ -105,6 +105,7 @@ ast_init_attributes(
   attributes->is_password = false;
   attributes->margin_left = 0;
   attributes->margin_right = 0;
+  attributes->fixed_width = 0;
 }
 
 void
@@ -147,6 +148,12 @@ ast_set_attributes_from_node(
       {
         char* endptr = NULL;
         attributes->margin_right = strtoul(node->attributes[attr].custom_value, &endptr, 10);
+        break;
+      }
+      case TML_ATTRIBUTE_FIXEDWIDTH:
+      {
+        char* endptr = NULL;
+        attributes->fixed_width = strtoul(node->attributes[attr].custom_value, &endptr, 10);
         break;
       }
       case TML_ATTRIBUTE_NULL:
@@ -352,12 +359,11 @@ ast_draw(
       case TML_ATTRIBUTE_NEWLINE:
       case TML_ATTRIBUTE_BOLD:
       case TML_ATTRIBUTE_NULL:
-      case TML_ATTRIBUTE_MINLENGTH:
-      case TML_ATTRIBUTE_MAXLENGTH:
       case TML_ATTRIBUTE_CALLBACK:
       case TML_ATTRIBUTE_PASSWORD:
       case TML_ATTRIBUTE_MARGINLEFT:
       case TML_ATTRIBUTE_MARGINRIGHT:
+      case TML_ATTRIBUTE_FIXEDWIDTH:
         break;
     }
   }
@@ -683,6 +689,7 @@ ast_get_inverse_colour(
     case TML_ATTRIBUTE_VALUE_TRUE:
     case TML_ATTRIBUTE_VALUE_FALSE:
     case TML_ATTRIBUTE_VALUE_CUSTOM:
+    case TML_ATTRIBUTE_VALUE_INT:
       return TML_ATTRIBUTE_VALUE_NONE;
   }
 
@@ -724,10 +731,9 @@ ast_get_allowed_attribute_values(
            | TML_ATTRIBUTE_VALUE_FALSE;
     }
 
-    case TML_ATTRIBUTE_MINLENGTH:
-    case TML_ATTRIBUTE_MAXLENGTH:
     case TML_ATTRIBUTE_MARGINLEFT:
     case TML_ATTRIBUTE_MARGINRIGHT:
+    case TML_ATTRIBUTE_FIXEDWIDTH:
       return TML_ATTRIBUTE_VALUE_INT;
 
     case TML_ATTRIBUTE_CALLBACK:
