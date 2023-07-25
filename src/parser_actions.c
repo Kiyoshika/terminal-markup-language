@@ -43,7 +43,6 @@ _close_and_insert_tag(
   return true;
 }
 
-// replace the if statements in close tag with these...plus use the _add_tag_value to actions_slash
 static bool
 _add_tag_name(
   struct parse_context_t* context,
@@ -63,18 +62,20 @@ _add_tag_name(
     return false;
   }
 
-  *current_node = ast_create(node_type, context->reference_node);
-  context->reference_node = *current_node;
-  if (!*current_node)
+  struct ast_t* new_node = ast_create(node_type, context->reference_node);
+  if (!new_node)
   {
     tml_error_node_failure(err_msg);
     return false;
   }
-  else if (*current_node == (void*)0x1)
+  else if (new_node == (void*)0x1)
   {
     tml_error_disallowed_child_type(err_msg, context->tag_name, context->source_buffer_idx);
     return false;
   }
+
+  *current_node = new_node;
+  context->reference_node = *current_node;
 
   return true;
 }
