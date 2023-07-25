@@ -585,6 +585,32 @@ ast_render(
         break;
       }
 
+      case KEY_LEFT:
+      {
+        if (clicked_item
+            && clicked_item->node->type == TML_NODE_INPUT
+            && mouse_x > clicked_item->x)
+        {
+          mouse_x--;
+          move(mouse_y, mouse_x);
+          refresh();
+        }
+        break;
+      }
+
+      case KEY_RIGHT:
+      {
+        if (clicked_item
+            && clicked_item->node->type == TML_NODE_INPUT
+            && mouse_x < clicked_item->x + clicked_item->width)
+        {
+          mouse_x++;
+          move(mouse_y, mouse_x);
+          refresh();
+        }
+        break;
+      }
+
       /* any other key */
       default:
       {
