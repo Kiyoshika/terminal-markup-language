@@ -14,7 +14,6 @@
 // forward declarations
 struct ast_t;
 
-/* ncurses stores positions as ints which is why I'm not using size_t like I usually do */
 struct iarray_item_t
 {
   struct ast_t* node; // shared pointer to the node this item refers to (DOES NOT get free'd with array)

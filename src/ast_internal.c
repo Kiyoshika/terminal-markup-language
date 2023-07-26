@@ -156,8 +156,20 @@ ast_render_button(
   if (node->contains_body)
     body_len = node->body.length;
 
+  size_t center_element_pos = attributes->fixed_width / 2;
+  size_t center_text_pos = body_len / 2;
+
+  if (body_len > attributes->fixed_width)
+    body_len = attributes->fixed_width;
+  
   iarray_add(interactive_items, node, *current_x, *current_y, body_len);
   move(*current_y, *current_x);
+
+  for (size_t i = 0; i < center_text_pos; ++i)
+  {
+    printw(" ");
+    (*current_x)++;
+  }
 
   printw("(");
   (*current_x)++;
