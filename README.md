@@ -3,24 +3,30 @@ This is a custom renderer to build (somewhat) interactive terminal applications 
 
 See the [TML Specification](tmlspec.md).
 
-## Preview (16 July 2023)
-This is a sample preview with a regular & password input box and some basic formatting.
+## Preview (27 July 2023)
+This is a sample login screen with a regular and password input and some dummy buttons
 
-![loginsample](https://github.com/Kiyoshika/tml/assets/49159969/597b0b22-7a0f-4ca9-80c4-28f1fe816761)
+
+
+https://github.com/Kiyoshika/tml/assets/49159969/fe083255-9e41-4bb2-b62a-611ee17f105e
+
+
 
 Rendered from the following TML:
 ```text
 <tml>
-  <text bold=true fg=cyan>Login:</text>
-
   <text/>
-
-  <text bold=true newline=false>Email:</text><space/>
+  <text marginLeft=2 fg=cyan bold=true>Login:</text>
+  <text/>
+  <text/>
+  <text marginLeft=2 marginRight=4 bold=true newline=false>Email:</text>
   <input fg=red bg=white/>
-
-  <text bold=true newline=false>Password:</text><space/>
-  <input password=true fg=red bg=white/>
-
+  <text/>
+  <text marginLeft=2 marginRight=1 bold=true newline=false>Password:</text>
+  <input fg=red bg=white password=true/>
+  <text/>
+  <button marginLeft=2 marginRight=1 fixedWidth=16 newline=false bg=green fg=white>Login</button>
+  <button fixedWidth=16 bg=blue fg=white>Register</button>
 </tml>
 ```
 
