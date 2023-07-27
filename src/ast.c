@@ -502,7 +502,7 @@ ast_render(
           {
             curs_set(1);
             size_t body_len = clicked_item->node->body.length;
-            mouse_x = mouse_x > body_len ? body_len + 1 : mouse_x;
+            mouse_x = (mouse_x - clicked_item->x) > body_len ? clicked_item->x + body_len : mouse_x;
             move(mouse_y, mouse_x);
             refresh();
           }
@@ -630,8 +630,6 @@ ast_render(
               || clicked_item->node->body.length >= clicked_item->width)
             break;
           ast_insert_char_to_body(clicked_item->node, (const char)current_key, position);
-          //clicked_item->width++;
-          iarray_shift_x_right(interactive_items, clicked_item->x, mouse_y, 1);
           ast_draw(root, interactive_items, &root_fg, &root_bg);
           mouse_x++;
           move(mouse_y, mouse_x);

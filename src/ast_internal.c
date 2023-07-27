@@ -125,7 +125,10 @@ ast_render_input(
 
   size_t remaining_space = attributes->fixed_width - (*current_x - start_x);
   for (size_t i = 0; i < remaining_space; ++i)
+  {
     printw(" ");
+    (*current_x)++;
+  }
 
   printw("]");
   (*current_x)++;
@@ -158,14 +161,23 @@ ast_render_button(
 
   size_t center_element_pos = attributes->fixed_width / 2;
   size_t center_text_pos = body_len / 2;
+  size_t start_pos = 0;
+
+  size_t clickable_size = attributes->fixed_width;
+  if (body_len > attributes->fixed_width)
+    clickable_size = body_len;
+  clickable_size++; // need to extend one more pixel otherwise the last pixel isn't clickable
+
+  if (center_element_pos > center_text_pos)
+    start_pos = center_element_pos - center_text_pos;
 
   if (body_len > attributes->fixed_width)
     body_len = attributes->fixed_width;
   
-  iarray_add(interactive_items, node, *current_x, *current_y, body_len);
+  iarray_add(interactive_items, node, *current_x, *current_y, clickable_size); 
   move(*current_y, *current_x);
 
-  for (size_t i = 0; i < center_text_pos; ++i)
+  for (size_t i = 0; i < start_pos; ++i)
   {
     printw(" ");
     (*current_x)++;
@@ -181,6 +193,12 @@ ast_render_button(
   }
   printw(")");
   (*current_x)++;
+
+  for (size_t i = 0; i < attributes->fixed_width - (start_pos + body_len); ++i)
+  {
+    printw(" ");
+    (*current_x)++;
+  }
 
   if (attributes->is_newline)
   {
