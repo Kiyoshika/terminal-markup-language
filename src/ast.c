@@ -25,9 +25,9 @@ ast_create(
   node->type = type; 
 
   node->body = (struct ast_string_body_t){
-    .content = calloc(10, sizeof(char)),
+    .content = calloc(25, sizeof(char)),
     .length = 0,
-    .capacity = 10
+    .capacity = 25 
   };
 
   if (!node->body.content)
@@ -105,6 +105,7 @@ ast_init_attributes(
   attributes->is_password = false;
   attributes->margin_left = 0;
   attributes->margin_right = 0;
+  attributes->fixed_width = 25;
 }
 
 void
@@ -147,6 +148,12 @@ ast_set_attributes_from_node(
       {
         char* endptr = NULL;
         attributes->margin_right = strtoul(node->attributes[attr].custom_value, &endptr, 10);
+        break;
+      }
+      case TML_ATTRIBUTE_FIXEDWIDTH:
+      {
+        char* endptr = NULL;
+        attributes->fixed_width = strtoul(node->attributes[attr].custom_value, &endptr, 10);
         break;
       }
       case TML_ATTRIBUTE_NULL:
@@ -253,7 +260,8 @@ ast_add_body(
   const char* const body)
 {
   size_t len = strlen(body);
-  size_t capacity = len * 2;
+  // keep a minimum capacity of 25 
+  size_t capacity = len * 2 + 25;
   char* _body = calloc(capacity, sizeof(char));
   if (!_body)
     return false;
@@ -352,12 +360,11 @@ ast_draw(
       case TML_ATTRIBUTE_NEWLINE:
       case TML_ATTRIBUTE_BOLD:
       case TML_ATTRIBUTE_NULL:
-      case TML_ATTRIBUTE_MINLENGTH:
-      case TML_ATTRIBUTE_MAXLENGTH:
       case TML_ATTRIBUTE_CALLBACK:
       case TML_ATTRIBUTE_PASSWORD:
       case TML_ATTRIBUTE_MARGINLEFT:
       case TML_ATTRIBUTE_MARGINRIGHT:
+      case TML_ATTRIBUTE_FIXEDWIDTH:
         break;
     }
   }
@@ -426,7 +433,7 @@ ast_insert_char_to_body(
   ast->body.content[position] = c;
   ast->body.length++;
 
-  if (ast->body.length == ast->body.capacity)
+  if (ast->body.length >= ast->body.capacity)
   {
     size_t new_capacity = ast->body.capacity * 2;
     void* alloc = realloc(ast->body.content, new_capacity);
@@ -494,6 +501,8 @@ ast_render(
           if (clicked_item->node->type == TML_NODE_INPUT)
           {
             curs_set(1);
+            size_t body_len = clicked_item->node->body.length;
+            mouse_x = (mouse_x - clicked_item->x) > body_len ? clicked_item->x + body_len : mouse_x;
             move(mouse_y, mouse_x);
             refresh();
           }
@@ -554,8 +563,6 @@ ast_render(
           if (position > 0)
             position--;
           ast_remove_char_from_body(clicked_item->node, position);
-          clicked_item->width--;
-          iarray_shift_x_left(interactive_items, clicked_item->x, mouse_y, 1);
           ast_draw(root, interactive_items, &root_fg, &root_bg);
           mouse_x--;
           move(mouse_y, mouse_x);
@@ -574,8 +581,6 @@ ast_render(
           if (len > 0)
           {
             ast_clear_body(clicked_item->node);
-            iarray_shift_x_left(interactive_items, clicked_item->x, clicked_item->y, len);
-            clicked_item->width -= len;
             ast_draw(root, interactive_items, &root_fg, &root_bg);
             mouse_x = clicked_item->x;
             mouse_y = clicked_item->y;
@@ -602,7 +607,8 @@ ast_render(
       {
         if (clicked_item
             && clicked_item->node->type == TML_NODE_INPUT
-            && mouse_x < clicked_item->x + clicked_item->width)
+            && mouse_x < clicked_item->x + clicked_item->width
+            && mouse_x <= clicked_item->node->body.length)
         {
           mouse_x++;
           move(mouse_y, mouse_x);
@@ -620,9 +626,10 @@ ast_render(
         {
           curs_set(1);
           const size_t position = mouse_x - clicked_item->x;
+          if (position >= clicked_item->width
+              || clicked_item->node->body.length >= clicked_item->width)
+            break;
           ast_insert_char_to_body(clicked_item->node, (const char)current_key, position);
-          clicked_item->width++;
-          iarray_shift_x_right(interactive_items, clicked_item->x, mouse_y, 1);
           ast_draw(root, interactive_items, &root_fg, &root_bg);
           mouse_x++;
           move(mouse_y, mouse_x);
@@ -683,6 +690,7 @@ ast_get_inverse_colour(
     case TML_ATTRIBUTE_VALUE_TRUE:
     case TML_ATTRIBUTE_VALUE_FALSE:
     case TML_ATTRIBUTE_VALUE_CUSTOM:
+    case TML_ATTRIBUTE_VALUE_INT:
       return TML_ATTRIBUTE_VALUE_NONE;
   }
 
@@ -724,10 +732,9 @@ ast_get_allowed_attribute_values(
            | TML_ATTRIBUTE_VALUE_FALSE;
     }
 
-    case TML_ATTRIBUTE_MINLENGTH:
-    case TML_ATTRIBUTE_MAXLENGTH:
     case TML_ATTRIBUTE_MARGINLEFT:
     case TML_ATTRIBUTE_MARGINRIGHT:
+    case TML_ATTRIBUTE_FIXEDWIDTH:
       return TML_ATTRIBUTE_VALUE_INT;
 
     case TML_ATTRIBUTE_CALLBACK:

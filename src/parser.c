@@ -23,11 +23,10 @@ const char* tml_attribute_names[N_ATTRIBUTE_TYPES] = {
   "newline",
   "bold",
   "callback",
-  "minLength",
-  "maxLength",
   "password",
   "marginLeft",
-  "marginRight"
+  "marginRight",
+  "fixedWidth"
 };
 
 // IMPORTANT: this must be ordered the same as

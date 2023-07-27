@@ -1,5 +1,5 @@
 # TML Specification (Terminal Markup Language)
-Version: 0.0.8 - 24 July 2023
+Version: 0.0.7 - 22 July 2023
 
 To see older versions of the spec, see the [TML Spec Archive](tmlspec-archive/)
 
@@ -214,10 +214,8 @@ Pressing `Ctrl + R` will clear ("reset") the input box, deleting all text inside
   * default value: same as parent node
 * `bg` - the background colour of the input box
   * default value: same as parent node
-* `fixedWidth` - set the width of the input box. users cannot enter more characters past this width unless `grow=true`.
+* `maxLength` - max length of the buffer; prevents user from inputting more characters
   * default value: `25`
-* `grow` - determine whether to allow users to enter more characters than specified by `fixedWidth` which expands (grows) the input box's size.
-  * default value: `false`
 * `password` - mask the input with `*` used for password or secret inputs
   * default value: `false`
 * `newline` - determine whether to add a newline after the input box
@@ -288,8 +286,6 @@ When the button is pressed, the foreground/background colours are inverted on mo
   * default value: same as parent node
 * `bg` - the background colour of the input box
   * default value: same as parent node
-* `fixedWidth` - the specified width of the button
-  * default value: length of the body + 2 (to account for the parenthesis)
 * `newline` - determine whether to add a newline after the input box
   * default value: `true`
 * `marginLeft` - apply padding to the left of the element
