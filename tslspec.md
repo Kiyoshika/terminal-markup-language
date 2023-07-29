@@ -125,23 +125,6 @@ It's illegal to take references of literals:
 
 ### Global and Local Scopes
 Any variables created outside of a function exists in `global` scope and can be accessed anywhere:
-
-Passing a `null` literal will only be valid to nullable types and will error if trying to assign to a non-nullable type:
-```
-<script>
-  void myFunc(float? a) {
-    // ...
-  }
-
-  void otherFunc(float a) {
-    // ...
-  }
-
-  void myCallback() {
-    myFunc(null); // ok, float? is nullable
-    otherFunc(null); // error, float is not nullable
-  }
-</script>
 ```
 <script>
   int value = 12;
@@ -267,6 +250,24 @@ Reassignment cannot be done on from a nullable to non-nullable type, but is allo
   value2 = value; // ok
   value3 = value2; // ok
 
+</script>
+```
+
+Passing a `null` literal will only be valid to nullable types and will error if trying to assign to a non-nullable type:
+```
+<script>
+  void myFunc(float? a) {
+    // ...
+  }
+
+  void otherFunc(float a) {
+    // ...
+  }
+
+  void myCallback() {
+    myFunc(null); // ok, float? is nullable
+    otherFunc(null); // error, float is not nullable
+  }
 </script>
 ```
 
@@ -414,6 +415,7 @@ if (expression) { // i.e., if expression is true
 } else { // <-- optional
   // ...
 }
+```
 
 These will be evaluated linearly; if the first expression isn't met, it will test the second, then the third, etc.
 
