@@ -341,6 +341,8 @@ Some tags that are planned in future iterations, these are not yet documented/fu
 * `<stack>`
 * `<center>`
 * `<group>` (kind of like html's div, can group child nodes together to apply same formatting/styles)
+* `<table>`
+* `<dropdown>`
 
 ## Planned Future Attributes
 Some future attributes that are planned:
