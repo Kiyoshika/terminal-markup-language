@@ -47,7 +47,7 @@ This is a list of keywords that cannot be used for variable or function names:
 * `bool`
 
 ### Basic Types and Variables
-There are a few funtamental basic types:
+There are a few fundamental basic types:
 * `string`
 * `int`
 * `float`
