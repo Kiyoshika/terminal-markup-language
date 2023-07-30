@@ -12,7 +12,7 @@ Code is checked at "render time" (when `./tmlrender [file]` is used) for any err
 # API Reference
 
 ### Introduction
-* [Reserved Keywords](#reserved-keywords)
+* [Comments](#comments)
 * [Basic Types and Variables](#basic-types-and-variables)
 * [Global and Local Scopes](#global-and-local-scopes)
 * [Variable References](#variable-references)
@@ -37,14 +37,17 @@ Code is checked at "render time" (when `./tmlrender [file]` is used) for any err
 * [Future Plans](#future-plans)
 
 ## Introduction
-### Reserved Keywords
-This is a list of keywords that cannot be used for variable or function names:
-* `int`
-* `string`
-* `float`
-* `void`
-* `null`
-* `bool`
+### Comments
+Single-line comments are notated with `//` and multiline with `/* ... */`:
+```
+// single line comment
+
+/*
+ * multi
+ * line
+ * comment
+ */
+```
 
 ### Basic Types and Variables
 There are a few fundamental basic types:
@@ -63,7 +66,7 @@ Creating variables is as follows:
 </script>
 ```
 
-Variable names must start with an ASCII letter, but can contain both letters and numbers. Variable names cannot used a [reserved keyword](#reserved-keywords).
+Variable names must start with an ASCII letter, but can contain both letters and numbers. 
 
 In TSL, there is no implicit casting. Conversions would have to be done explicitly:
 ```
@@ -528,7 +531,25 @@ int[5] a3 = a1 + a2; // { 2, 4, 6, 8, 10 };
 Arithmetic on dynamic arrays is not supported and will error.
 
 ### Loops
-TODO: finish
+There are two types of loops:
+
+Traditional:
+```
+int result = 0;
+for (int i = 0; i < 5; i++) {
+  result += i;
+}
+```
+
+Range-based:
+```
+int result = 0;
+int[5] values = { 2, 4, 6, 8, 10 };
+
+for (int value in values) {
+  result += value;
+}
+```
 
 ## Types
 ### String Type
@@ -580,11 +601,65 @@ float variableName = 1.234;
 * `string toString()` - converts the float into string representation
 * `int toInt()` - converts the float into int representation
 
+### Bool Type
+**Creation:**
+```
+bool variableName = true; // or false
+```
+
+Unlike most languages, bools are not implicitly converted to ints.
+```
+bool var = true;
+int value = 1 * var; // error, cannot convert bool to int
+
+int value = 1 * var.toInt(); // ok, returns 1
+```
+
+Booleans can be inverted with the logical NOT `!`:
+```
+bool var = true;
+bool inverse = !var; // false
+```
+
+**Methods:**
+* `int toInt()` - converts bool to integer representation, 1 for true and 0 for false.
+
+
 ### Static Arrays
-TODO: finish
+**Creation:**
+```
+type[length] variableName = { ... };
+
+// e.g.,
+int[5] intArray = { 1, 2, 3, 4, 5 };
+```
+
+Providing more elements than allocated will result in an error.
+
+Providing less elements than allocated will fill with zeros:
+
+```
+int[5] intArray = { 1 }; // becomes { 1, 0, 0, 0, 0 };
+```
+
+Likewise, the default declaration will pad with zeros:
+```
+int[5] intArray; // becomes { 0, 0, 0, 0, 0 }
+```
+
+References can be created for static arrays:
+```
+int[5] intArray = { 1, 2, 3, 4, 5 };
+int[5]& ref = &intArray;
+
+ref[0] = 10; // also modifies intArray[0]
+```
+
+**Reassignment:**
+Reassignment is not supported for static arrays and will result in an error.
 
 ### Dynamic Arrays
-**Creation**:
+**Creation:**
 ```
 type[] variableName = { ... };
 
@@ -617,7 +692,65 @@ b[0] = 10; // also modifies a[0]
 * `int[]? findAll(type value)` - searches the array for all occurrences of a value with type `type`. If none were found, returns `null`, otherwise returns a dynamic int array containing all indices of the value.
 
 ## Objects
-TODO: finish this section
+### Text Object
+This object represents a `<text>` node in TML.
+
+You can fetch a text node provided it has an id specified:
+```
+<tml>
+  <text id=myText>sample</text>
+</tml>
+
+<script>
+  // getObject is a built-in function
+  text myText = getObject("myText");
+</script>
+```
+
+**Methods:**
+* `string getText()` - return the body of the text node as a string
+* `void setText(string& text)` - set the body of the text node
+* `void setVisible(bool isVisible)` - set the element visible or not
+
+### Input Object
+This object represents an `<input>` node in TML.
+
+You can fetch an input node provided it has an id specified:
+```
+<tml>
+  <input id=myInput>Placeholder</text>
+</tml>
+
+<script>
+  input myInput = getObject("myInput");
+</script>
+
+**Methods:**
+* `string getText()` - return the body of the input node as a string
+* `void setText(string& text)` - set the body of the input node
+* `void setCursorPos(int pos)` - set the cursor position to a specific index. If pos < 0 or > body length it will move to the most appropirate position
+* `void clear()` - clear the content of the input node
+* `void setVisible(bool isVisible)` - set the element visible or not
+```
+
+### Button Object
+This object represents a `<button>` node in TML.
+
+You can fetch a button node provided it has an id specified:
+```
+<tml>
+  <button id=myButton>Submit</button>
+</tml>
+
+<script>
+  button myButton = getObject("myButton");
+</script>
+```
+
+**Methods:**
+* `string getText()` - return the body of the button as a string (does not include parenthesis)
+* `void setText(string& text)` - set the body of the button
+* `void setVisible(bool isVisible)` - set the element visible or not
 
 ## Misc
 ### Future Plans
