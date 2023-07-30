@@ -16,6 +16,8 @@ endif()
 find_package(Curses REQUIRED)
 include_directories(${CURSES_INCLUDE_DIR})
 
+# build TSL first since TML depends on it
+add_subdirectory(src/tsl)
 add_subdirectory(src)
 
 if (COMPILE_TESTS)
