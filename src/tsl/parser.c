@@ -55,7 +55,7 @@ _parser_char_is_delimiter(
   const char current_char,
   const char next_char)
 {
-  if (isspace(current_char) || ispunct(current_char) || next_char == ';')
+  if (isspace(current_char) || ispunct(current_char) || ispunct(next_char))
     return true;
 
   return false;
@@ -132,6 +132,9 @@ tsl_parser_get_next_token(
 
     if (_parser_char_is_delimiter(current_char, next_char))
     {
+      if (_parser_isspecial_token(current_char, next_char))
+        context->buffer_idx++;
+
       _parser_append_char_to_current_token(context, current_char, next_char);
       break;
     }
