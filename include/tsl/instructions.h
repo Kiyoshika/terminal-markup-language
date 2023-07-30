@@ -2,7 +2,9 @@
 #define INSTRUCTIONS_H
 
 #include "variable.h"
-#include "function.h"
+
+// forward declaration
+struct function_t;
 
 enum instruction_type_e
 {
@@ -58,13 +60,20 @@ struct instruction_list_t
   size_t capacity;
 };
 
-struct instruction_list_t*
-inst_create_list();
-
 void
-inst_add_instruction(
+inst_create_var(
+  struct instruction_t* dest_instruction,
+  struct function_t** reference_function,
+  struct variable_t** variable);
+
+
+struct instruction_list_t*
+inst_list_create();
+
+bool
+inst_list_add_instruction(
   struct instruction_list_t* instruction_list,
   const enum instruction_type_e instruction_type,
-  void* instruction_struct);
+  const void* const instruction_struct);
 
 #endif

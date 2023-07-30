@@ -23,11 +23,26 @@ struct variable_t
   void* value;
 };
 
+struct variable_list_t
+{
+  struct variable_t* variables;
+  size_t n_variables;
+  size_t capacity;
+};
+
 struct variable_t*
 var_create(
   const char* const name,
   const enum variable_type_e type,
   const void* const value,
   const size_t value_size);
+
+struct variable_list_t*
+var_list_create();
+
+bool
+var_list_add_variable(
+  struct variable_list_t* const variable_list,
+  const struct variable_t* const variable);
 
 #endif
