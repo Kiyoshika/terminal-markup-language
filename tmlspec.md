@@ -118,7 +118,7 @@ This creates a white terminal where all nodes will have a red foreground by defa
 ## Script
 **Tag Name:** `<script>`
 
-**Description:** A code block to enter functions used to handle callbacks. See the [TSL Documentation](tsldoc.md)
+**Description:** A code block to enter functions used to handle callbacks. See the [TSL Specification](tslspec.md)
 
 ## Text
 **Tag Name:** `<text>`
