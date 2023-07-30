@@ -2,6 +2,6 @@
 
 int main()
 {
-  tsl_parser_parse("if (x == y || x==y) {}");
+  tsl_parser_parse("string[] split(string& inputStr, int len) { hey }");
   return 0;
 }
