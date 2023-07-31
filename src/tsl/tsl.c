@@ -40,8 +40,7 @@ tsl_global_scope_create()
 bool
 tsl_global_add_instruction(
   struct tsl_global_scope_t* const global_scope,
-  const enum instruction_type_e instruction_type,
   const struct instruction_t* const instruction)
 {
-  return inst_list_add_instruction(global_scope->instruction_list, instruction_type, instruction);
+  return inst_list_add_instruction(global_scope->instruction_list, instruction);
 }

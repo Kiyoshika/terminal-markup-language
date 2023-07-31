@@ -2,6 +2,6 @@
 
 int main()
 {
-  tsl_parser_parse("string[] split(string& inputStr, int len) { hey }");
+  tsl_parser_parse("int x = 10;");
   return 0;
 }

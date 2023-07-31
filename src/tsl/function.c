@@ -43,10 +43,9 @@ func_add_variable(
 bool
 func_add_instruction(
   struct function_t* const function,
-  const enum instruction_type_e instruction_type,
   const struct instruction_t* const instruction)
 {
-  return inst_list_add_instruction(function->instruction_list, instruction_type, instruction);
+  return inst_list_add_instruction(function->instruction_list, instruction);
 }
 
 struct function_list_t*

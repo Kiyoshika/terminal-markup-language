@@ -26,7 +26,8 @@ enum token_type_e
   TSL_TOKEN_TYPE_DATATYPE = (1 << 0u),
   TSL_TOKEN_TYPE_TEXT = (1 << 1u),
   TSL_TOKEN_TYPE_OPERATOR = (1 << 2u),
-  TSL_TOKEN_TYPE_ENDSTATEMENT = (1 << 3u),
+  TSL_TOKEN_TYPE_BRACKET = (1 << 3u),
+  TSL_TOKEN_TYPE_MISC = (1 << 4u),
 };
 
 extern char tsl_tokens[TSL_N_TOKENS][TSL_MAX_TOKEN_LEN];
@@ -73,13 +74,18 @@ enum token_e
 
 struct parse_context_t
 {
+  struct tsl_global_scope_t* global_scope;
+
+  // information about original source buffer
   const char* const buffer;
   size_t buffer_idx;
   const size_t buffer_len;
 
+  // contextual information about current/expected state (bitmasks of enum parse_state_e)
   uint64_t current_state;
   uint64_t expected_state;
 
+  // contextual information about current/previous token
   char current_token_text[TSL_MAX_TOKEN_LEN];
   size_t current_token_text_len;
   enum token_e current_token;
@@ -88,6 +94,12 @@ struct parse_context_t
   char previous_token_text[TSL_MAX_TOKEN_LEN];
   enum token_e previous_token;
   enum token_type_e previous_token_type;
+
+  // meta information gathered during parsing process
+  enum token_e datatype;
+  char object_name[TSL_MAX_TOKEN_LEN];
+  bool assigning_value;
+  char object_value[TSL_MAX_TOKEN_LEN]; // TODO: make this heap-allocated later
 };
 
 void
@@ -103,11 +115,11 @@ tsl_parser_get_next_token(
   struct parse_context_t* const context);
 
 void
-tsl_parser_get_next_expected_state(
+tsl_parser_get_token_tags(
   struct parse_context_t* const context);
 
 void
-tsl_parser_get_token_tags(
+tsl_parser_perform_action(
   struct parse_context_t* const context);
 
 #endif

@@ -1,4 +1,6 @@
 #include "parser.h"
+#include "tsl.h"
+#include "instructions.h"
 
 char tsl_tokens[TSL_N_TOKENS][TSL_MAX_TOKEN_LEN] = {
   // datatypes
@@ -99,17 +101,68 @@ _parser_append_char_to_current_token(
   return true;
 }
 
+static enum token_type_e
+_parser_get_token_type(
+  const enum token_e current_token)
+{
+  switch (current_token)
+  {
+    case TSL_TOKEN_INT:
+    case TSL_TOKEN_FLOAT:
+    case TSL_TOKEN_BOOL:
+    case TSL_TOKEN_STRING:
+      return TSL_TOKEN_TYPE_DATATYPE;
+
+    case TSL_TOKEN_GREATER_THAN:
+    case TSL_TOKEN_GREATER_THAN_EQUAL:
+    case TSL_TOKEN_LESS_THAN:
+    case TSL_TOKEN_LESS_THAN_EQUAL:
+    case TSL_TOKEN_ASSIGN: // =
+    case TSL_TOKEN_EQUAL: // ==
+    case TSL_TOKEN_NOT_EQUAL:
+    case TSL_TOKEN_LOGICAL_NOT:
+    case TSL_TOKEN_LOGICAL_OR:
+    case TSL_TOKEN_LOGICAL_AND:
+    case TSL_TOKEN_PLUS:
+    case TSL_TOKEN_MINUS:
+    case TSL_TOKEN_MULTIPLY:
+    case TSL_TOKEN_DIVIDE:
+      return TSL_TOKEN_TYPE_OPERATOR;
+
+    case TSL_TOKEN_OPEN_PAREN:
+    case TSL_TOKEN_CLOSE_PAREN:
+    case TSL_TOKEN_OPEN_BODY: // {
+    case TSL_TOKEN_CLOSE_BODY: // }
+    case TSL_TOKEN_OPEN_ARRAY: // [
+    case TSL_TOKEN_CLOSE_ARRAY: // ]
+      return TSL_TOKEN_TYPE_BRACKET;
+
+    case TSL_TOKEN_COMMA:
+    case TSL_TOKEN_SEMICOLON:
+    case TSL_TOKEN_QUOTE:
+    case TSL_TOKEN_SPACE:
+      return TSL_TOKEN_TYPE_MISC;
+  }
+
+  return TSL_TOKEN_TYPE_TEXT;
+}
+
 void
 tsl_parser_parse(
   const char* const tsl_script)
 {
+  // TODO: add expected token checks
+  // (e.g., prevent int x 10 instead of int x = 10 by checking expected tokens)
+
   struct parse_context_t context = {
+    .global_scope = tsl_global_scope_create(),
+
     .buffer = tsl_script,
     .buffer_idx = 0,
     .buffer_len = strlen(tsl_script),
 
     .current_state = TSL_STATE_NONE,
-    .expected_state = TSL_STATE_CREATING_VAR | TSL_STATE_CREATING_FUNCTION,
+    .expected_state = TSL_STATE_NONE,
 
     .current_token_text = {0},
     .current_token_text_len = 0,
@@ -118,13 +171,19 @@ tsl_parser_parse(
 
     .previous_token_text = {0},
     .previous_token = TSL_TOKEN_NONE,
-    .previous_token_type = TSL_TOKEN_TYPE_NONE
+    .previous_token_type = TSL_TOKEN_TYPE_NONE,
+
+    .datatype = TSL_TOKEN_NONE,
+    .object_name = {0},
+    .assigning_value = false,
+    .object_value = {0}
   };
 
   while (context.buffer_idx < context.buffer_len)
   {
     tsl_parser_get_next_token(&context);
     printf("CURRENT TOKEN: %s (%d)\n", context.current_token_text, context.current_token);
+    tsl_parser_perform_action(&context);
   }
 }
 
@@ -143,11 +202,15 @@ tsl_parser_get_token_tags(
   struct parse_context_t* const context)
 {
   context->previous_token = context->current_token;
+  context->previous_token_type = context->current_token_type;
+
   context->current_token = TSL_TOKEN_NONE;
 
   for (size_t i = 0; i < (size_t)TSL_N_TOKENS; ++i)
     if (strcmp(tsl_tokens[i], context->current_token_text) == 0)
       context->current_token = i;
+
+  context->current_token_type = _parser_get_token_type(context->current_token);
 }
 
 void
@@ -182,4 +245,112 @@ tsl_parser_get_next_token(
   }
 
   tsl_parser_get_token_tags(context);
+}
+
+void
+tsl_parser_perform_action(
+  struct parse_context_t* const context)
+{
+  // NOTE: error handling isn't imlemented yet, we just have dummy messages & exits for now
+
+  switch (context->current_token_type)
+  {
+    case TSL_TOKEN_TYPE_DATATYPE:
+    {
+      if (context->current_state != TSL_STATE_NONE)
+      {
+        printf("invalid state.\n");
+        exit(-1);
+      }
+
+      // by default, we'll assume we're parsing a variable unless we run into a TSL_TOKEN_OPEN_PAREN
+      context->current_state = TSL_STATE_CREATING_VAR;
+      context->datatype = context->current_token;
+      break;
+    }
+
+    case TSL_TOKEN_TYPE_TEXT:
+    {
+      if ((context->current_state & (TSL_STATE_CREATING_VAR | TSL_STATE_CREATING_FUNCTION)) == 0)
+      {
+        printf("invalid state.\n");
+        exit(-1);
+      }
+
+      if (context->current_state == TSL_STATE_CREATING_VAR && !context->assigning_value)
+      {
+        memset(context->object_name, 0, TSL_MAX_TOKEN_LEN);
+        strncat(context->object_name, context->current_token_text, TSL_MAX_TOKEN_LEN);
+      }
+      else if (context->current_state == TSL_STATE_CREATING_VAR && context->assigning_value)
+      {
+        memset(context->object_value, 0, TSL_MAX_TOKEN_LEN);
+        strncat(context->object_value, context->current_token_text, TSL_MAX_TOKEN_LEN);
+      }
+      break;
+    }
+  }
+
+  switch (context->current_token)
+  {
+    case TSL_TOKEN_ASSIGN:
+    {
+      if (context->current_state != TSL_STATE_CREATING_VAR)
+      {
+        printf("invalid state.\n");
+        exit(-1);
+      }
+
+      context->assigning_value = true;
+      break;
+    }
+
+    case TSL_TOKEN_SEMICOLON:
+    {
+      if (context->current_state == TSL_STATE_CREATING_VAR)
+      {
+        if (strlen(context->object_name) == 0)
+        {
+          printf("empty variable name.\n");
+          exit(-1);
+        }
+
+        if (strlen(context->object_name) == 0)
+        {
+          printf("empty value.\n");
+          exit(-1);
+        }
+
+        switch (context->datatype)
+        {
+          case TSL_TOKEN_INT:
+          {
+            char* endptr;
+            int32_t value = strtol(context->object_value, &endptr, 10);
+            if (strlen(endptr) > 0)
+            {
+              printf("invalid integer value.\n");
+              exit(-1);
+            }
+
+            struct variable_t* new_variable 
+              = var_create(
+                  context->object_name,
+                  VAR_TYPE_INT,
+                  &value,
+                  sizeof(int32_t));
+
+            struct instruction_t create_var;
+            inst_create_var(&create_var, NULL, &new_variable);
+            tsl_global_add_instruction(context->global_scope, &create_var);
+
+            break;
+          }
+
+          // TODO: other datatypes
+        }
+      }
+      break;
+    }
+  }
 }
