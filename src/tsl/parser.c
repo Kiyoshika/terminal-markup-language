@@ -247,6 +247,7 @@ tsl_parser_get_next_token(
   tsl_parser_get_token_tags(context);
 }
 
+// TODO: split this up into parser_actions.c like we did for TML 
 void
 tsl_parser_perform_action(
   struct parse_context_t* const context)
@@ -278,15 +279,9 @@ tsl_parser_perform_action(
       }
 
       if (context->current_state == TSL_STATE_CREATING_VAR && !context->assigning_value)
-      {
-        memset(context->object_name, 0, TSL_MAX_TOKEN_LEN);
         strncat(context->object_name, context->current_token_text, TSL_MAX_TOKEN_LEN);
-      }
       else if (context->current_state == TSL_STATE_CREATING_VAR && context->assigning_value)
-      {
-        memset(context->object_value, 0, TSL_MAX_TOKEN_LEN);
         strncat(context->object_value, context->current_token_text, TSL_MAX_TOKEN_LEN);
-      }
       break;
     }
   }
@@ -302,6 +297,18 @@ tsl_parser_perform_action(
       }
 
       context->assigning_value = true;
+      break;
+    }
+
+    case TSL_TOKEN_MINUS:
+    {
+      if (context->current_state != TSL_STATE_CREATING_VAR)
+      {
+        printf("invalid state.\n");
+        exit(-1);
+      }
+
+      strncat(context->object_value, context->current_token_text, TSL_MAX_TOKEN_LEN);
       break;
     }
 
@@ -347,10 +354,69 @@ tsl_parser_perform_action(
             break;
           }
 
-          // TODO: other datatypes
+          case TSL_TOKEN_FLOAT:
+          {
+            char* endptr;
+            float value = strtof(context->object_value, &endptr);
+            if (strlen(endptr) > 0)
+            {
+              printf("invalid float value.\n");
+              exit(-1);
+            }
+
+            struct variable_t* new_variable
+              = var_create(
+                  context->object_name,
+                  VAR_TYPE_FLOAT,
+                  &value,
+                  sizeof(float));
+
+            struct instruction_t create_var;
+            inst_create_var(&create_var, NULL, &new_variable);
+            tsl_global_add_instruction(context->global_scope, &create_var);
+
+            break;
+          }
+
+          case TSL_TOKEN_BOOL:
+          {
+            break;
+          };
+
+          case TSL_TOKEN_STRING:
+          {
+
+            break;
+          };
+
         }
       }
+
+      tsl_parser_reset_state(context);
       break;
     }
   }
+}
+
+void
+tsl_parser_reset_state(
+  struct parse_context_t* const context)
+{
+  context->current_state = TSL_STATE_NONE;
+  context->expected_state = TSL_STATE_NONE;
+
+  memset(context->current_token_text, 0, TSL_MAX_TOKEN_LEN);
+  context->current_token_text_len = 0;
+  context->current_token = TSL_TOKEN_NONE;
+  context->current_token_type = TSL_TOKEN_TYPE_NONE;
+
+  memset(context->previous_token_text, 0, TSL_MAX_TOKEN_LEN);
+  context->previous_token = TSL_TOKEN_NONE;
+  context->previous_token_type = TSL_TOKEN_TYPE_NONE;
+
+  context->datatype = TSL_TOKEN_NONE;
+  memset(context->object_name, 0, TSL_MAX_TOKEN_LEN);
+  context->assigning_value = false;
+  memset(context->object_value, 0, TSL_MAX_TOKEN_LEN);
+
 }

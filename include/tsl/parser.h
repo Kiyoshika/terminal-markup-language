@@ -122,4 +122,8 @@ void
 tsl_parser_perform_action(
   struct parse_context_t* const context);
 
+void
+tsl_parser_reset_state(
+  struct parse_context_t* const context);
+
 #endif
