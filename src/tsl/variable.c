@@ -22,7 +22,7 @@ var_create(
 
   new_variable->type = type;
 
-  new_variable->value = calloc(value_size, 1);
+  new_variable->value = calloc(1, value_size);
   if (!new_variable->value)
   {
     free(new_variable->name);
@@ -30,7 +30,7 @@ var_create(
     return NULL;
   }
 
-  memcpy(&new_variable->value, value, value_size);
+  memcpy(new_variable->value, value, value_size);
 
   return new_variable;
 }

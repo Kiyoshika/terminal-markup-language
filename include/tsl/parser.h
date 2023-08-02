@@ -3,8 +3,7 @@
 
 #define TSL_MAX_TOKEN_LEN 101
 #define TSL_PARSING_STATES 3
-#define TSL_N_DATATYPES 4
-#define TSL_N_OPERATORS 11
+#define TSL_N_TOKENS 28
 
 #include <stddef.h>
 #include <string.h>
@@ -21,54 +20,86 @@ enum parse_state_e
   TSL_STATE_ADDING_FUNCTION_PARAM = (1 << 2u),
 };
 
+enum token_type_e
+{
+  TSL_TOKEN_TYPE_NONE = 0u,
+  TSL_TOKEN_TYPE_DATATYPE = (1 << 0u),
+  TSL_TOKEN_TYPE_TEXT = (1 << 1u),
+  TSL_TOKEN_TYPE_OPERATOR = (1 << 2u),
+  TSL_TOKEN_TYPE_BRACKET = (1 << 3u),
+  TSL_TOKEN_TYPE_MISC = (1 << 4u),
+};
+
+extern char tsl_tokens[TSL_N_TOKENS][TSL_MAX_TOKEN_LEN];
 enum token_e
 {
-  TSL_TOKEN_NONE = 0u,
-  TSL_TOKEN_DATATYPE = (1 << 0u),
-  TSL_TOKEN_TEXT = (1 << 1u),
-  TSL_TOKEN_OPERATOR = (1 << 2u),
-  TSL_TOKEN_SEMICOLON = (1 << 3u),
-};
+  TSL_TOKEN_NONE = -1,
 
-extern char tsl_datatypes[TSL_N_DATATYPES][TSL_MAX_TOKEN_LEN];
-enum token_datatype_e
-{
-  TSL_TOKEN_DATATYPE_INT = (1 << 0u),
-  TSL_TOKEN_DATATYPE_FLOAT = (1 << 1u),
-  TSL_TOKEN_DATATYPE_BOOL = (1 << 2u),
-  TSL_TOKEN_DATATYPE_STRING = (1 << 3u),
-};
+  // datatypes
+  TSL_TOKEN_INT = 0,
+  TSL_TOKEN_FLOAT,
+  TSL_TOKEN_BOOL,
+  TSL_TOKEN_STRING,
 
-extern char tsl_operators[TSL_N_OPERATORS][TSL_MAX_TOKEN_LEN];
-enum token_operator_e
-{
-  TSL_TOKEN_OPERATOR_ASSIGN = (1 << 0u),
-  TSL_TOKEN_OPERATOR_EQUAL = (1 << 1u),
-  TSL_TOKEN_OPERATOR_NOT_EQUAL = (1 << 2u),
-  TSL_TOKEN_OPERATOR_GREATER_THAN = (1 << 3u),
-  TSL_TOKEN_OPERATOR_GREATER_THAN_EQUAL = (1 << 4u),
-  TSL_TOKEN_OPERATOR_LESS_THAN = (1 << 5u),
-  TSL_TOKEN_OPERATOR_LESS_TAN_EQUAL = (1 << 6u),
-  TSL_TOKEN_OPERATOR_REFERENCE = (1 << 7u),
-  TSL_TOKEN_OPERATOR_NOT = (1 << 8u),
-  TSL_TOKEN_OPERATOR_LOGICAL_AND = (1 << 9u),
-  TSL_TOKEN_OPERATOR_LOGICAL_OR = (1 << 10u),
-};
+  // operators
+  TSL_TOKEN_GREATER_THAN,
+  TSL_TOKEN_GREATER_THAN_EQUAL,
+  TSL_TOKEN_LESS_THAN,
+  TSL_TOKEN_LESS_THAN_EQUAL,
+  TSL_TOKEN_ASSIGN, // =
+  TSL_TOKEN_EQUAL, // ==
+  TSL_TOKEN_NOT_EQUAL,
+  TSL_TOKEN_LOGICAL_NOT,
+  TSL_TOKEN_LOGICAL_OR,
+  TSL_TOKEN_LOGICAL_AND,
+  TSL_TOKEN_PLUS,
+  TSL_TOKEN_MINUS,
+  TSL_TOKEN_MULTIPLY,
+  TSL_TOKEN_DIVIDE,
 
+  // brackets 
+  TSL_TOKEN_OPEN_PAREN,
+  TSL_TOKEN_CLOSE_PAREN,
+  TSL_TOKEN_OPEN_BODY, // {
+  TSL_TOKEN_CLOSE_BODY, // }
+  TSL_TOKEN_OPEN_ARRAY, // [
+  TSL_TOKEN_CLOSE_ARRAY, // ]
+  
+  // misc
+  TSL_TOKEN_COMMA,
+  TSL_TOKEN_SEMICOLON,
+  TSL_TOKEN_QUOTE,
+  TSL_TOKEN_SPACE,
+};
 
 struct parse_context_t
 {
+  struct tsl_global_scope_t* global_scope;
+
+  // information about original source buffer
   const char* const buffer;
   size_t buffer_idx;
   const size_t buffer_len;
 
+  // contextual information about current/expected state (bitmasks of enum parse_state_e)
   uint64_t current_state;
   uint64_t expected_state;
 
-  char current_token[TSL_MAX_TOKEN_LEN];
-  size_t current_token_len;
+  // contextual information about current/previous token
+  char current_token_text[TSL_MAX_TOKEN_LEN];
+  size_t current_token_text_len;
+  enum token_e current_token;
+  enum token_type_e current_token_type;
 
-  char previous_token[TSL_MAX_TOKEN_LEN];
+  char previous_token_text[TSL_MAX_TOKEN_LEN];
+  enum token_e previous_token;
+  enum token_type_e previous_token_type;
+
+  // meta information gathered during parsing process
+  enum token_e datatype;
+  char object_name[TSL_MAX_TOKEN_LEN];
+  bool assigning_value;
+  char object_value[TSL_MAX_TOKEN_LEN]; // TODO: make this heap-allocated later
 };
 
 void
@@ -84,7 +115,15 @@ tsl_parser_get_next_token(
   struct parse_context_t* const context);
 
 void
-tsl_parser_get_next_expected_state(
+tsl_parser_get_token_tags(
+  struct parse_context_t* const context);
+
+void
+tsl_parser_perform_action(
+  struct parse_context_t* const context);
+
+void
+tsl_parser_reset_state(
   struct parse_context_t* const context);
 
 #endif

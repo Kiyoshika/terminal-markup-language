@@ -73,7 +73,6 @@ inst_list_create();
 bool
 inst_list_add_instruction(
   struct instruction_list_t* instruction_list,
-  const enum instruction_type_e instruction_type,
-  const void* const instruction_struct);
+  const struct instruction_t* const instruction);
 
 #endif

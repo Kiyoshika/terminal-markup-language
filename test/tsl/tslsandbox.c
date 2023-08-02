@@ -2,6 +2,6 @@
 
 int main()
 {
-  tsl_parser_parse("int x =   0;\nint y = -12;");
+  tsl_parser_parse("int x = -3;");
   return 0;
 }

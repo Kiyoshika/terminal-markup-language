@@ -25,7 +25,6 @@ tsl_global_scope_create();
 bool
 tsl_global_add_instruction(
   struct tsl_global_scope_t* const global_scope,
-  const enum instruction_type_e instruction_type,
   const struct instruction_t* const instruction);
   
 

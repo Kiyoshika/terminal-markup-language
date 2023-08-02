@@ -48,7 +48,6 @@ func_add_variable(
 bool
 func_add_instruction(
   struct function_t* const function,
-  const enum instruction_type_e instruction_type,
   const struct instruction_t* const instruction);
 
 struct function_list_t*
