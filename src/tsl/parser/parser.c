@@ -332,6 +332,7 @@ tsl_parser_perform_action(
         {
           case TSL_TOKEN_INT:
           {
+            // check if variable name first
             char* endptr;
             int32_t value = strtol(context->object_value, &endptr, 10);
             if (strlen(endptr) > 0)
