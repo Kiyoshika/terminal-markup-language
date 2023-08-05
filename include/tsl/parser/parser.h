@@ -12,6 +12,9 @@
 #include <ctype.h>
 #include <stdbool.h>
 
+// forward declaration
+struct global_scope_t;
+
 enum parse_state_e
 {
   TSL_STATE_NONE = 0u,
@@ -102,7 +105,7 @@ struct parse_context_t
   char object_value[TSL_MAX_TOKEN_LEN]; // TODO: make this heap-allocated later
 };
 
-void
+struct tsl_global_scope_t*
 tsl_parser_parse(
   const char* const tsl_script);
 
@@ -118,7 +121,7 @@ void
 tsl_parser_get_token_tags(
   struct parse_context_t* const context);
 
-void
+bool
 tsl_parser_perform_action(
   struct parse_context_t* const context);
 

@@ -5,6 +5,8 @@ add_library(
   parser/parser.c
   parser/parser_internal.c
   parser/parser_actions.c
+  parser/parser_instructions.c
+  parser/parser_instructions_internal.c
   # MISC
   variable.c
   instructions.c
