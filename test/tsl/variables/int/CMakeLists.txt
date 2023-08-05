@@ -1,0 +1,35 @@
+add_executable(tsl_var_uninitialized_int tsl_var_uninitialized_value.c)
+target_link_libraries(tsl_var_uninitialized_int tsl)
+add_test(NAME tsl_var_uninitialized_int COMMAND tsl_var_uninitialized_int)
+
+add_executable(tsl_var_positive_int tsl_var_positive_value.c)
+target_link_libraries(tsl_var_positive_int tsl)
+add_test(NAME tsl_var_positive_int COMMAND tsl_var_positive_int)
+
+add_executable(tsl_var_negative_int tsl_var_negative_value.c)
+target_link_libraries(tsl_var_negative_int tsl)
+add_test(NAME tsl_var_negative_int COMMAND tsl_var_negative_int)
+
+add_executable(tsl_var_empty_name_int tsl_var_empty_name.c)
+target_link_libraries(tsl_var_empty_name_int tsl)
+add_test(NAME tsl_var_empty_name_int COMMAND tsl_var_empty_name_int)
+
+add_executable(tsl_var_empty_value_int tsl_var_empty_value.c)
+target_link_libraries(tsl_var_empty_value_int tsl)
+add_test(NAME tsl_var_empty_value_int COMMAND tsl_var_empty_value_int)
+
+add_executable(tsl_var_invalid_name_int tsl_var_invalid_name.c)
+target_link_libraries(tsl_var_invalid_name_int tsl)
+add_test(NAME tsl_var_invalid_name_int COMMAND tsl_var_invalid_name_int)
+
+add_executable(tsl_var_invalid_value_int tsl_var_invalid_value.c)
+target_link_libraries(tsl_var_invalid_value_int tsl)
+add_test(NAME tsl_var_invalid_value_int COMMAND tsl_var_invalid_value_int)
+
+add_executable(tsl_var_valid_names_int tsl_var_valid_names.c)
+target_link_libraries(tsl_var_valid_names_int tsl)
+add_test(NAME tsl_var_valid_names_int COMMAND tsl_var_valid_names_int)
+
+add_executable(tsl_var_int_with_decimal tsl_var_int_with_decimal.c)
+target_link_libraries(tsl_var_int_with_decimal tsl)
+add_test(NAME tsl_var_int_with_decimal_int COMMAND tsl_var_int_with_decimal)

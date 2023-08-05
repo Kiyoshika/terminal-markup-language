@@ -1,6 +1,8 @@
 #include "parser.h"
 #include "tsl.h"
 #include "instructions.h"
+#include "parser_actions.h"
+#include "parser_internal.h"
 
 char tsl_tokens[TSL_N_TOKENS][TSL_MAX_TOKEN_LEN] = {
   // datatypes
@@ -147,7 +149,7 @@ _parser_get_token_type(
   return TSL_TOKEN_TYPE_TEXT;
 }
 
-void
+struct tsl_global_scope_t*
 tsl_parser_parse(
   const char* const tsl_script)
 {
@@ -183,8 +185,14 @@ tsl_parser_parse(
   {
     tsl_parser_get_next_token(&context);
     printf("CURRENT TOKEN: %s (%d)\n", context.current_token_text, context.current_token);
-    tsl_parser_perform_action(&context);
+    if (!tsl_parser_perform_action(&context))
+    {
+      tsl_global_scope_free(&context.global_scope);
+      return NULL;
+    }
   }
+
+  return context.global_scope;
 }
 
 char
@@ -247,155 +255,35 @@ tsl_parser_get_next_token(
   tsl_parser_get_token_tags(context);
 }
 
-// TODO: split this up into parser_actions.c like we did for TML 
-void
+bool
 tsl_parser_perform_action(
   struct parse_context_t* const context)
 {
-  // NOTE: error handling isn't imlemented yet, we just have dummy messages & exits for now
 
   switch (context->current_token_type)
   {
     case TSL_TOKEN_TYPE_DATATYPE:
-    {
-      if (context->current_state != TSL_STATE_NONE)
-      {
-        printf("invalid state.\n");
-        exit(-1);
-      }
-
-      // by default, we'll assume we're parsing a variable unless we run into a TSL_TOKEN_OPEN_PAREN
-      context->current_state = TSL_STATE_CREATING_VAR;
-      context->datatype = context->current_token;
+      return tsl_parser_actions_datatype(context);
       break;
-    }
 
     case TSL_TOKEN_TYPE_TEXT:
-    {
-      if ((context->current_state & (TSL_STATE_CREATING_VAR | TSL_STATE_CREATING_FUNCTION)) == 0)
-      {
-        printf("invalid state.\n");
-        exit(-1);
-      }
-
-      if (context->current_state == TSL_STATE_CREATING_VAR && !context->assigning_value)
-        strncat(context->object_name, context->current_token_text, TSL_MAX_TOKEN_LEN);
-      else if (context->current_state == TSL_STATE_CREATING_VAR && context->assigning_value)
-        strncat(context->object_value, context->current_token_text, TSL_MAX_TOKEN_LEN);
+      return tsl_parser_actions_text(context);
       break;
-    }
   }
 
   switch (context->current_token)
   {
     case TSL_TOKEN_ASSIGN:
-    {
-      if (context->current_state != TSL_STATE_CREATING_VAR)
-      {
-        printf("invalid state.\n");
-        exit(-1);
-      }
-
-      context->assigning_value = true;
+      return tsl_parser_actions_assign(context);
       break;
-    }
 
     case TSL_TOKEN_MINUS:
-    {
-      if (context->current_state != TSL_STATE_CREATING_VAR)
-      {
-        printf("invalid state.\n");
-        exit(-1);
-      }
-
-      strncat(context->object_value, context->current_token_text, TSL_MAX_TOKEN_LEN);
+      return tsl_parser_actions_minus(context); 
       break;
-    }
 
     case TSL_TOKEN_SEMICOLON:
-    {
-      if (context->current_state == TSL_STATE_CREATING_VAR)
-      {
-        if (strlen(context->object_name) == 0)
-        {
-          printf("empty variable name.\n");
-          exit(-1);
-        }
-
-        if (strlen(context->object_name) == 0)
-        {
-          printf("empty value.\n");
-          exit(-1);
-        }
-
-        switch (context->datatype)
-        {
-          case TSL_TOKEN_INT:
-          {
-            // check if variable name first
-            char* endptr;
-            int32_t value = strtol(context->object_value, &endptr, 10);
-            if (strlen(endptr) > 0)
-            {
-              printf("invalid integer value.\n");
-              exit(-1);
-            }
-
-            struct variable_t* new_variable 
-              = var_create(
-                  context->object_name,
-                  VAR_TYPE_INT,
-                  &value,
-                  sizeof(int32_t));
-
-            struct instruction_t create_var;
-            inst_create_var(&create_var, NULL, &new_variable);
-            tsl_global_add_instruction(context->global_scope, &create_var);
-
-            break;
-          }
-
-          case TSL_TOKEN_FLOAT:
-          {
-            char* endptr;
-            float value = strtof(context->object_value, &endptr);
-            if (strlen(endptr) > 0)
-            {
-              printf("invalid float value.\n");
-              exit(-1);
-            }
-
-            struct variable_t* new_variable
-              = var_create(
-                  context->object_name,
-                  VAR_TYPE_FLOAT,
-                  &value,
-                  sizeof(float));
-
-            struct instruction_t create_var;
-            inst_create_var(&create_var, NULL, &new_variable);
-            tsl_global_add_instruction(context->global_scope, &create_var);
-
-            break;
-          }
-
-          case TSL_TOKEN_BOOL:
-          {
-            break;
-          };
-
-          case TSL_TOKEN_STRING:
-          {
-
-            break;
-          };
-
-        }
-      }
-
-      tsl_parser_reset_state(context);
+      return tsl_parser_actions_semicolon(context);
       break;
-    }
   }
 }
 

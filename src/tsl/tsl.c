@@ -38,9 +38,19 @@ tsl_global_scope_create()
 }
 
 bool
-tsl_global_add_instruction(
+tsl_global_scope_add_instruction(
   struct tsl_global_scope_t* const global_scope,
   const struct instruction_t* const instruction)
 {
   return inst_list_add_instruction(global_scope->instruction_list, instruction);
+}
+
+void
+tsl_global_scope_free(
+  struct tsl_global_scope_t** global_scope)
+{
+  if (!*global_scope)
+    return;
+
+  // TODO:
 }

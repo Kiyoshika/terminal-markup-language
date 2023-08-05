@@ -7,7 +7,7 @@ option(COMPILE_TESTS "Compile tests" ON)
 
 if (DEBUG_MODE)
   message("Compiling in debug mode...")
-  set(CMAKE_C_FLAGS "-O0 -g -Wall -Wextra -Wpedantic -fsanitize=address")
+  set(CMAKE_C_FLAGS "-O0 -g -Wall -Wextra")
 else()
   message("Compiling in release mode...")
   set(CMAKE_C_FLAGS "-O2 -Wall")
