@@ -10,6 +10,7 @@ add_library(
   # MISC
   variable.c
   instructions.c
+  execute_instructions.c
   function.c
 )
 target_include_directories(

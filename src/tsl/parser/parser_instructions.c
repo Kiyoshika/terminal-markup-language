@@ -1,6 +1,7 @@
 #include "parser_instructions.h"
 #include "parser_instructions_internal.h"
 #include "parser.h"
+#include "parser_internal.h"
 
 bool
 tsl_parser_instructions_create_var(

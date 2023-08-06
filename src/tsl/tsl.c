@@ -2,6 +2,9 @@
 #include "function.h"
 #include "variable.h"
 #include "instructions.h"
+#include "parser_internal.h"
+#include "execute_instructions.h"
+#include <stdio.h>
 
 struct tsl_global_scope_t*
 tsl_global_scope_create()
@@ -43,6 +46,34 @@ tsl_global_scope_add_instruction(
   const struct instruction_t* const instruction)
 {
   return inst_list_add_instruction(global_scope->instruction_list, instruction);
+}
+
+bool
+tsl_global_scope_execute_instructions(
+  struct tsl_global_scope_t* const global_scope)
+{
+  for (size_t i = 0; i < global_scope->instruction_list->n_instructions; ++i)
+  {
+    switch (global_scope->instruction_list->instructions[i].instruction_type)
+    {
+      case INST_TYPE_CREATE_VAR:
+        if (!tsl_execute_instructions_create_var(global_scope, i))
+          return false;
+        break;
+
+      case INST_TYPE_STORE_LITERAL:
+        if (!tsl_execute_instructions_store_literal(global_scope, i))
+          return false;
+        break;
+
+      case INST_TYPE_STORE_VAR:
+        if (!tsl_execute_instructions_store_var(global_scope, i))
+          return false;
+        break;
+    }
+  }
+
+  return true;
 }
 
 void

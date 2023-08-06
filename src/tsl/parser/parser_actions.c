@@ -74,14 +74,15 @@ bool
 tsl_parser_actions_semicolon(
   struct parse_context_t* const context)
 {
+  bool success = true;
   switch (context->current_state)
   {
     case TSL_STATE_CREATING_VAR:
-      return tsl_parser_instructions_create_var(context);
+      success = tsl_parser_instructions_create_var(context);
       break;
   }
 
   tsl_parser_reset_state(context);
 
-  return true;
+  return success;
 }

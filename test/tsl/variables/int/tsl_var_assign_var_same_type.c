@@ -1,13 +1,13 @@
 #include "tsl.h"
 #include "parser.h"
 #include "instructions.h"
+#include "variable.h"
 #include <stdio.h>
 #include <string.h>
-#include <math.h>
 
 int main()
 {
-  struct tsl_global_scope_t* global_scope = tsl_parser_parse("float someVar123 = 12.23;");
+  struct tsl_global_scope_t* global_scope = tsl_parser_parse("int someVar123 = -12; int y = someVar123;");
 
   if (!global_scope)
   {
@@ -15,15 +15,15 @@ int main()
     return -1;
   }
 
-  struct variable_t* variable = &global_scope->variable_list->variables[0];
+  struct variable_t* variable = &global_scope->variable_list->variables[1];
 
-  if (strcmp(variable->name, "someVar123") != 0)
+  if (strcmp(variable->name, "y") != 0)
   {
     fprintf(stderr, "Incorrect variable name.\n");
     return -1;
   }
 
-  if (fabsf(variable->value.as_float - 12.23f) > 0.000001f)
+  if (variable->value.as_int != -12) // should be copied from someVar123
   {
     fprintf(stderr, "Incorrect variable value.\n");
     return -1;

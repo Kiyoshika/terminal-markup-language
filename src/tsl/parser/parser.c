@@ -192,6 +192,12 @@ tsl_parser_parse(
     }
   }
 
+  if (!tsl_global_scope_execute_instructions(context.global_scope))
+  {
+    tsl_global_scope_free(&context.global_scope);
+    return NULL;
+  }
+
   return context.global_scope;
 }
 
