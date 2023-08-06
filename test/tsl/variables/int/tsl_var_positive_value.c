@@ -1,6 +1,7 @@
 #include "tsl.h"
 #include "parser.h"
 #include "instructions.h"
+#include "variable.h"
 #include <stdio.h>
 #include <string.h>
 
@@ -14,18 +15,15 @@ int main()
     return -1;
   }
 
-  struct instruction_create_var_t* create_var
-    = &global_scope->instruction_list[0].instructions->instruction.create_var;
+  struct variable_t* variable = &global_scope->variable_list->variables[0];
 
-  char* name = create_var->variable->name;
-  if (strcmp(name, "someVar123") != 0)
+  if (strcmp(variable->name, "someVar123") != 0)
   {
     fprintf(stderr, "Incorrect variable name.\n");
     return -1;
   }
 
-  int32_t value = *(int32_t*)create_var->variable->value;
-  if (value != 12)
+  if (variable->value.as_int != 12)
   {
     fprintf(stderr, "Incorrect variable value.\n");
     return -1;

@@ -1,38 +1,102 @@
 #include "variable.h"
 
 struct variable_t*
-var_create(
+var_create_int(
   const char* const name,
-  const enum variable_type_e type,
-  const void* const value,
-  const size_t value_size)
+  const int32_t value)
 {
-  struct variable_t* new_variable
-    = malloc(sizeof(*new_variable));
-
-  if (!new_variable)
+  struct variable_t* new_var = malloc(sizeof(*new_var));
+  if (!new_var)
     return NULL;
 
-  new_variable->name = strdup(name);
-  if (!new_variable->name)
+  new_var->name = strdup(name);
+  if (!new_var->name)
   {
-    free(new_variable);
+    free(new_var);
     return NULL;
   }
 
-  new_variable->type = type;
+  new_var->type = VAR_TYPE_INT;
+  new_var->value.as_int = value;
 
-  new_variable->value = calloc(1, value_size);
-  if (!new_variable->value)
+  return new_var;
+
+}
+
+struct variable_t*
+var_create_float(
+  const char* const name,
+  const float value)
+{
+  struct variable_t* new_var = malloc(sizeof(*new_var));
+  if (!new_var)
+    return NULL;
+
+  new_var->name = strdup(name);
+  if (!new_var->name)
   {
-    free(new_variable->name);
-    free(new_variable);
+    free(new_var);
     return NULL;
   }
 
-  memcpy(new_variable->value, value, value_size);
+  new_var->type = VAR_TYPE_FLOAT;
+  new_var->value.as_float = value;
 
-  return new_variable;
+  return new_var;
+
+}
+
+struct variable_t*
+var_create_bool(
+  const char* const name,
+  const bool value)
+{
+  struct variable_t* new_var = malloc(sizeof(*new_var));
+  if (!new_var)
+    return NULL;
+
+  new_var->name = strdup(name);
+  if (!new_var->name)
+  {
+    free(new_var);
+    return NULL;
+  }
+
+  new_var->type = VAR_TYPE_BOOL;
+  new_var->value.as_bool = value;
+
+  return new_var;
+
+}
+
+struct variable_t*
+var_create_string(
+  const char* const name,
+  const char* const value)
+{
+  struct variable_t* new_var = malloc(sizeof(*new_var));
+  if (!new_var)
+    return NULL;
+
+  new_var->name = strdup(name);
+  if (!new_var->name)
+  {
+    free(new_var);
+    return NULL;
+  }
+
+  new_var->type = VAR_TYPE_STRING;
+  new_var->value.as_string = strdup(value);
+
+  if (!new_var->value.as_string)
+  {
+    free(new_var->name);
+    free(new_var);
+    return NULL;
+  }
+
+  return new_var;
+
 }
 
 struct variable_list_t*
@@ -76,4 +140,16 @@ var_list_add_variable(
   }
 
   return true;
+}
+
+struct variable_t*
+var_list_find(
+  const struct variable_list_t* const variable_list,
+  const char* const variable_name)
+{
+  for (size_t i = 0; i < variable_list->n_variables; ++i)
+    if (strcmp(variable_list->variables[i].name, variable_name) == 0)
+      return &variable_list->variables[i];
+
+  return NULL;
 }
