@@ -242,7 +242,11 @@ tsl_parser_get_next_token(
 
   // consume whitespace
   while (context->buffer[context->buffer_idx] == ' ')
+  {
+    if (context->assigning_value && context->inside_quotes)
+      strncat(context->object_value, " ", TSL_MAX_TOKEN_LEN);
     context->buffer_idx++;
+  }
 
   while (context->buffer_idx < context->buffer_len)
   {
@@ -297,6 +301,21 @@ tsl_parser_perform_action(
     case TSL_TOKEN_QUOTE:
       return tsl_parser_actions_quote(context);
       break;
+
+    case TSL_TOKEN_COMMA:
+      return tsl_parser_actions_comma(context);
+      break;
+
+    // any other unrecognized token will be added a string literal (if parsing)
+    default:
+    {
+      if (context->assigning_value && context->inside_quotes)
+      {
+        strncat(context->object_value, context->current_token_text, TSL_MAX_TOKEN_LEN);
+        return true;
+      }
+      break;
+    }
   }
 }
 

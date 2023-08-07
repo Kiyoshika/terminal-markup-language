@@ -108,3 +108,13 @@ tsl_parser_actions_quote(
     context->is_string_literal = true;
   return true;
 }
+
+bool
+tsl_parser_actions_comma(
+  struct parse_context_t* const context)
+{
+  if (context->assigning_value && context->inside_quotes)
+    strncat(context->object_value, ",", TSL_MAX_TOKEN_LEN);
+
+  return true;
+}
