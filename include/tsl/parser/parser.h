@@ -103,6 +103,9 @@ struct parse_context_t
   char object_name[TSL_MAX_TOKEN_LEN];
   bool assigning_value;
   char object_value[TSL_MAX_TOKEN_LEN]; // TODO: make this heap-allocated later
+
+  bool inside_quotes;
+  bool is_string_literal;
 };
 
 struct tsl_global_scope_t*

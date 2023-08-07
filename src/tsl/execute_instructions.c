@@ -38,13 +38,15 @@ tsl_execute_instructions_create_var(
 
     case VAR_TYPE_BOOL:
     {
-      // TODO:
+      struct variable_t* var_bool = var_create_bool(create_var->variable_name, false);
+      var_list_add_variable(global_scope->variable_list, var_bool);
       break;
     }
 
     case VAR_TYPE_STRING:
     {
-      // TODO:
+      struct variable_t* var_string = var_create_string(create_var->variable_name, "");
+      var_list_add_variable(global_scope->variable_list, var_string);
       break;
     }
   }

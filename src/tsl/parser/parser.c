@@ -178,7 +178,10 @@ tsl_parser_parse(
     .datatype = TSL_TOKEN_NONE,
     .object_name = {0},
     .assigning_value = false,
-    .object_value = {0}
+    .object_value = {0},
+
+    .inside_quotes = false,
+    .is_string_literal = false
   };
 
   while (context.buffer_idx < context.buffer_len)
@@ -290,6 +293,10 @@ tsl_parser_perform_action(
     case TSL_TOKEN_SEMICOLON:
       return tsl_parser_actions_semicolon(context);
       break;
+
+    case TSL_TOKEN_QUOTE:
+      return tsl_parser_actions_quote(context);
+      break;
   }
 }
 
@@ -313,5 +320,8 @@ tsl_parser_reset_state(
   memset(context->object_name, 0, TSL_MAX_TOKEN_LEN);
   context->assigning_value = false;
   memset(context->object_value, 0, TSL_MAX_TOKEN_LEN);
+
+  context->inside_quotes = false;
+  context->is_string_literal = false;
 
 }
