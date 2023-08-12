@@ -38,4 +38,16 @@ bool
 tsl_parser_actions_open_paren(
   struct parse_context_t* const context);
 
+bool
+tsl_parser_actions_close_paren(
+  struct parse_context_t* const context);
+
+bool
+tsl_parser_actions_open_body(
+  struct parse_context_t* const context);
+
+bool
+tsl_parser_actions_close_body(
+  struct parse_context_t* const context);
+
 #endif

@@ -310,6 +310,18 @@ tsl_parser_perform_action(
       return tsl_parser_actions_open_paren(context);
       break;
 
+    case TSL_TOKEN_CLOSE_PAREN:
+      return tsl_parser_actions_close_paren(context);
+      break;
+
+    case TSL_TOKEN_OPEN_BODY:
+      return tsl_parser_actions_open_body(context);
+      break;
+
+    case TSL_TOKEN_CLOSE_BODY:
+      return tsl_parser_actions_close_body(context);
+      break;
+
     // any other unrecognized token will be added a string literal (if parsing)
     default:
     {
@@ -321,6 +333,7 @@ tsl_parser_perform_action(
       break;
     }
   }
+  return false;
 }
 
 void

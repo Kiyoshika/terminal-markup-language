@@ -89,3 +89,15 @@ func_list_add_function(
 
   return true;
 }
+
+struct function_t*
+func_list_find(
+  const struct function_list_t* const function_list,
+  const char* const function_name)
+{
+  for (size_t i = 0; i < function_list->n_functions; ++i)
+    if (strcmp(function_list->functions[i].name, function_name) == 0)
+      return &function_list->functions[i];
+
+  return NULL;
+}

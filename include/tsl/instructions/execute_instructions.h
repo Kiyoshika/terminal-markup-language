@@ -18,7 +18,12 @@ tsl_execute_instructions_store_literal(
   const size_t instruction_idx);
 
 bool
-tsl_execute_instruction_store_var(
+tsl_execute_instructions_store_var(
+  struct tsl_global_scope_t* const global_scope,
+  const size_t instruction_idx);
+
+bool
+tsl_execute_instructions_create_function(
   struct tsl_global_scope_t* const global_scope,
   const size_t instruction_idx);
 

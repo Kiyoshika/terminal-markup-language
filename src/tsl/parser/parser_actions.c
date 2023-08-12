@@ -123,29 +123,83 @@ bool
 tsl_parser_actions_open_paren(
   struct parse_context_t* const context)
 {
+  if (context->assigning_value && context->inside_quotes)
+  {
+    strncat(context->object_value, "(", TSL_MAX_TOKEN_LEN);
+    return true;
+  }
+
   // parser starts off assuming we're creating a variable until we hit a '(' token
-  if (context->state & (TSL_STATE_NONE | TSL_STATE_CREATING_VAR) == 0)
+  if ((context->current_state & (TSL_STATE_NONE | TSL_STATE_CREATING_VAR)) == 0)
   {
     printf("invalid state.\n");
     return false;
   }
 
-  switch (context->state)
+  switch (context->current_state)
   {
     case TSL_STATE_CREATING_VAR:
     {
-      context->state = TSL_STATE_CREATING_FUNCTION;
+      tsl_parser_instructions_create_function(context);
+      context->current_state = TSL_STATE_ADDING_FUNCTION_PARAM;
       return true;
     }
 
     case TSL_STATE_NONE:
     {
-      context->state = TSL_STATE_FUNCTION_CALL;
+      context->current_state = TSL_STATE_FUNCTION_CALL;
       return true;
     }
 
     default:
       return true;
   }
+  return true;
+}
+
+bool
+tsl_parser_actions_close_paren(
+  struct parse_context_t* const context)
+{
+  if (context->assigning_value && context->inside_quotes)
+  {
+    strncat(context->object_value, ")", TSL_MAX_TOKEN_LEN);
+    return true;
+  }
+
+  if ((context->current_state & TSL_STATE_ADDING_FUNCTION_PARAM) == 0)
+  {
+    printf("invalid state.\n");
+    return false;
+  }
+
+  context->current_state = TSL_STATE_CREATING_FUNCTION_BODY;
+  return true;
+}
+
+bool
+tsl_parser_actions_open_body(
+  struct parse_context_t* const context)
+{
+  if (context->assigning_value && context->inside_quotes)
+  {
+    strncat(context->object_value, "{", TSL_MAX_TOKEN_LEN);
+    return true;
+  }
+
+  return true;
+}
+
+bool
+tsl_parser_actions_close_body(
+  struct parse_context_t* const context)
+{
+  if (context->assigning_value && context->inside_quotes)
+  {
+    strncat(context->object_value, "}", TSL_MAX_TOKEN_LEN);
+    return true;
+  }
+
+  context->current_state = TSL_STATE_NONE;
   return true;
 }

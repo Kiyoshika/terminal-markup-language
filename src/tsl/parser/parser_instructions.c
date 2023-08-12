@@ -57,8 +57,32 @@ tsl_parser_instructions_create_function(
     return false;
   }
 
-  // TODO: finish me, need to add an instruction in instructions.c for creating a new function
-  // which adds a new object to the global scope. Note that we will also need to start updating
-  // reference functions when creating variables after this functionality. Currently we're passing
-  // a bunch of NULL parameters manually to those functions.
+  struct instruction_t create_function;
+  enum variable_type_e return_type = 0;
+  switch (context->datatype)
+  {
+    case TSL_TOKEN_INT:
+      return_type = VAR_TYPE_INT;
+      break;
+
+    case TSL_TOKEN_FLOAT:
+      return_type = VAR_TYPE_FLOAT;
+      break;
+
+    case TSL_TOKEN_BOOL:
+      return_type = VAR_TYPE_BOOL;
+      break;
+
+    case TSL_TOKEN_STRING:
+      return_type = VAR_TYPE_STRING;
+      break;
+
+    default:
+      printf("unknown function return type.\n");
+      return false;
+  }
+  inst_create_function(&create_function, context->object_name, return_type);
+  tsl_global_scope_add_instruction(context->global_scope, &create_function);
+
+  return true;
 }

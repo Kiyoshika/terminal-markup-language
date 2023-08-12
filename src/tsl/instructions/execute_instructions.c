@@ -147,3 +147,32 @@ tsl_execute_instructions_store_var(
 
   return true;
 }
+
+bool
+tsl_execute_instructions_create_function(
+  struct tsl_global_scope_t* const global_scope,
+  const size_t instruction_idx)
+{
+  struct instruction_create_function_t* create_function
+    = &global_scope->instruction_list->instructions[instruction_idx].instruction.create_function;
+
+  struct function_t* function
+    = func_list_find(global_scope->function_list, create_function->function_name);
+
+  if (function)
+  {
+    printf("Function '%s' already exists.\n", function->name);
+    return false;
+  }
+
+  struct function_t new_function = {
+    .return_type = create_function->return_type,
+    .name = {0},
+    .instruction_list = inst_list_create()
+  };
+  strncat(new_function.name, create_function->function_name, FUNC_NAME_MAX_LEN);
+
+  func_list_add_function(
+    global_scope->function_list,
+    &new_function);
+}

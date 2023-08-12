@@ -57,4 +57,10 @@ bool
 func_list_add_function(
   struct function_list_t* const function_list,
   const struct function_t* const function);
+
+struct function_t*
+func_list_find(
+  const struct function_list_t* const function_list,
+  const char* const function_name);
+
 #endif

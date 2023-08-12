@@ -2,7 +2,7 @@
 #define PARSER_H
 
 #define TSL_MAX_TOKEN_LEN 101
-#define TSL_PARSING_STATES 3
+#define TSL_PARSING_STATES 5
 #define TSL_N_TOKENS 28
 
 #include <stddef.h>
@@ -21,6 +21,8 @@ enum parse_state_e
   TSL_STATE_CREATING_VAR = (1 << 0u),
   TSL_STATE_CREATING_FUNCTION = (1 << 1u),
   TSL_STATE_ADDING_FUNCTION_PARAM = (1 << 2u),
+  TSL_STATE_FUNCTION_CALL = (1 << 3u),
+  TSL_STATE_CREATING_FUNCTION_BODY = (1 << 4u),
 };
 
 enum token_type_e
