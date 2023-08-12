@@ -306,6 +306,10 @@ tsl_parser_perform_action(
       return tsl_parser_actions_comma(context);
       break;
 
+    case TSL_TOKEN_OPEN_PAREN:
+      return tsl_parser_actions_open_paren(context);
+      break;
+
     // any other unrecognized token will be added a string literal (if parsing)
     default:
     {

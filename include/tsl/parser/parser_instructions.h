@@ -11,4 +11,7 @@ bool
 tsl_parser_instructions_create_var(
   struct parse_context_t* const context);
 
+bool tsl_parser_instructions_create_function(
+  struct parse_context_t* const context);
+
 #endif

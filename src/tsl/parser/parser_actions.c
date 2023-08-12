@@ -118,3 +118,34 @@ tsl_parser_actions_comma(
 
   return true;
 }
+
+bool
+tsl_parser_actions_open_paren(
+  struct parse_context_t* const context)
+{
+  // parser starts off assuming we're creating a variable until we hit a '(' token
+  if (context->state & (TSL_STATE_NONE | TSL_STATE_CREATING_VAR) == 0)
+  {
+    printf("invalid state.\n");
+    return false;
+  }
+
+  switch (context->state)
+  {
+    case TSL_STATE_CREATING_VAR:
+    {
+      context->state = TSL_STATE_CREATING_FUNCTION;
+      return true;
+    }
+
+    case TSL_STATE_NONE:
+    {
+      context->state = TSL_STATE_FUNCTION_CALL;
+      return true;
+    }
+
+    default:
+      return true;
+  }
+  return true;
+}
