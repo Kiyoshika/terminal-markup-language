@@ -99,3 +99,74 @@ _parser_instructions_create_var_float(
 
   return true;
 }
+
+bool
+_parser_instructions_create_var_bool(
+  struct parse_context_t* const context)
+{
+  struct instruction_t create_var;
+  inst_create_var(&create_var, NULL, context->object_name, VAR_TYPE_BOOL);
+  tsl_global_scope_add_instruction(context->global_scope, &create_var);
+
+  if (strlen(context->object_value) == 0 && context->assigning_value)
+  {
+    printf("assigning empty value.\n");
+    return false;
+  }
+
+  // literals
+  bool value = false;
+  if (strcmp(context->object_value, "true") == 0)
+    value = true;
+  else if (strcmp(context->object_value, "false") == 0)
+    value = false;
+  // variable name
+  else if (strlen(context->object_value) > 0)
+  {
+    struct instruction_t store_var;
+    inst_store_var(&store_var, NULL, context->object_name, context->object_value);
+    tsl_global_scope_add_instruction(context->global_scope, &store_var);
+    return true;
+  }
+
+  if (context->assigning_value)
+  {
+    struct instruction_t store_literal;
+    inst_store_literal_bool(&store_literal, NULL, context->object_name, value);
+    tsl_global_scope_add_instruction(context->global_scope, &store_literal);
+  }
+
+  return true;
+}
+
+bool
+_parser_instructions_create_var_string(
+  struct parse_context_t* const context)
+{
+  struct instruction_t create_var;
+  inst_create_var(&create_var, NULL, context->object_name, VAR_TYPE_STRING);
+  tsl_global_scope_add_instruction(context->global_scope, &create_var);
+
+  if (strlen(context->object_value) == 0 && context->assigning_value)
+  {
+    printf("assigning empty value.\n");
+    return false;
+  }
+
+  // literal
+  if (context->is_string_literal)
+  {
+    struct instruction_t store_literal;
+    inst_store_literal_string(&store_literal, NULL, context->object_name, context->object_value);
+    tsl_global_scope_add_instruction(context->global_scope, &store_literal);
+  }
+  // variable name
+  else if (context->assigning_value)
+  {
+    struct instruction_t store_var;
+    inst_store_var(&store_var, NULL, context->object_name, context->object_value);
+    tsl_global_scope_add_instruction(context->global_scope, &store_var);
+  }
+
+  return true;
+}

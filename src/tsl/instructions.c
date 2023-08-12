@@ -124,7 +124,7 @@ inst_store_literal_string(
   struct instruction_store_literal_t store_literal = {
     .reference_function = NULL,
     .variable_name = strdup(variable_name), // dangerously assumining no allocation error
-    .variable_type = VAR_TYPE_BOOL,
+    .variable_type = VAR_TYPE_STRING,
     .variable_value.as_string = strdup(variable_value) // dangerously assumining no allocation error
   };
 

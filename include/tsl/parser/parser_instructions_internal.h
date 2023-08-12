@@ -19,4 +19,12 @@ bool
 _parser_instructions_create_var_float(
   struct parse_context_t* const context);
 
+bool
+_parser_instructions_create_var_bool(
+  struct parse_context_t* const context);
+
+bool
+_parser_instructions_create_var_string(
+  struct parse_context_t* const context);
+
 #endif

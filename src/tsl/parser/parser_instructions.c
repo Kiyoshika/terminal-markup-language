@@ -30,9 +30,11 @@ tsl_parser_instructions_create_var(
       break;
 
     case TSL_TOKEN_BOOL:
+      return _parser_instructions_create_var_bool(context);
       break;
 
     case TSL_TOKEN_STRING:
+      return _parser_instructions_create_var_string(context);
       break;
   }
 
