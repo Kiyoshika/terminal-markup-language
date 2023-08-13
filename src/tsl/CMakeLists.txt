@@ -14,6 +14,7 @@ add_library(
   instructions/instructions_create_function.c
   instructions/instructions_create_var.c
   instructions/instructions_store_literal.c
+  instructions/instructions_create_return_value.c
   instructions/instructions_store_var.c
   # MISC
   variable.c

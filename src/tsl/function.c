@@ -9,6 +9,7 @@ func_create(
   if (!function)
     return NULL;
 
+  function->contains_return_value = false;
   function->return_type = return_type;
 
   memset(function->name, 0, FUNC_NAME_MAX_LEN);

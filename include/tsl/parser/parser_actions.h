@@ -54,4 +54,9 @@ bool
 tsl_parser_actions_comma(
   struct parse_context_t* const context);
 
+bool
+tsl_parser_actions_return(
+  struct parse_context_t* const context);
+
+
 #endif

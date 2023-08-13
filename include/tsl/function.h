@@ -26,6 +26,15 @@ struct function_t
   struct variable_list_t* variable_list;
 
   struct instruction_list_t* instruction_list;
+
+  bool contains_return_value;
+  union return_value
+  {
+    int32_t as_int;
+    float as_float;
+    bool as_bool;
+    char* as_string;
+  } return_value;
 };
 
 struct function_list_t

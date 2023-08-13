@@ -39,7 +39,8 @@ char tsl_tokens[TSL_N_TOKENS][TSL_MAX_TOKEN_LEN] = {
   ",",
   ";",
   "\"",
-  " "
+  " ",
+  "return"
 };
 
 static bool
@@ -143,6 +144,7 @@ _parser_get_token_type(
     case TSL_TOKEN_SEMICOLON:
     case TSL_TOKEN_QUOTE:
     case TSL_TOKEN_SPACE:
+    case TSL_TOKEN_RETURN:
       return TSL_TOKEN_TYPE_MISC;
   }
 
@@ -322,6 +324,10 @@ tsl_parser_perform_action(
 
     case TSL_TOKEN_CLOSE_BODY:
       return tsl_parser_actions_close_body(context);
+      break;
+
+    case TSL_TOKEN_RETURN:
+      return tsl_parser_actions_return(context);
       break;
 
     // any other unrecognized token will be added a string literal (if parsing)

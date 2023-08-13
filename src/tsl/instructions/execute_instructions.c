@@ -171,6 +171,8 @@ tsl_execute_instructions_create_function(
   func_list_add_function(
     global_scope->function_list,
     new_function);
+
+  return true;
 }
 
 bool
@@ -187,6 +189,13 @@ tsl_execute_instructions_add_function_arg(
   if (!reference_function)
   {
     printf("function '%s' does not exist.\n", add_function_arg->reference_function_name);
+    return false;
+  }
+
+  struct variable_t* find_variable = var_list_find(reference_function->variable_list, add_function_arg->argument_name);
+  if (find_variable)
+  {
+    printf("variable '%s' already exists.\n", add_function_arg->argument_name);
     return false;
   }
 
@@ -214,6 +223,81 @@ tsl_execute_instructions_add_function_arg(
   // function arguments are essentially treated like stack variables; they're created first
   // before user-defined stack variables
   func_add_variable(reference_function, arg_variable);
+
+  return true;
+}
+
+bool
+tsl_execute_instructions_create_return_value(
+  struct tsl_global_scope_t* const global_scope,
+  const size_t instruction_idx)
+{
+  struct instruction_create_return_value_t* create_return_value
+    = &global_scope->instruction_list->instructions[instruction_idx].instruction.create_return_value;
+
+  struct function_t* reference_function
+    = func_list_find(global_scope->function_list, create_return_value->reference_function_name);
+
+  struct variable_t* return_variable
+    = var_list_find(reference_function->variable_list, create_return_value->value);
+
+  if (return_variable)
+  {
+    if (return_variable->type != reference_function->return_type)
+    {
+      printf("returning variable with incorrect type.\n");
+      return false;
+    }
+
+    switch (reference_function->return_type)
+    {
+      case VAR_TYPE_INT:
+        reference_function->return_value.as_int = return_variable->value.as_int;
+        break;
+
+      case VAR_TYPE_FLOAT:
+        reference_function->return_value.as_float = return_variable->value.as_float;
+        break;
+
+      case VAR_TYPE_BOOL:
+        reference_function->return_value.as_bool = return_variable->value.as_bool;
+        break;
+
+      case VAR_TYPE_STRING:
+        reference_function->return_value.as_string = strdup(return_variable->value.as_string);
+        break;
+    }
+  }
+  else
+  {
+    enum variable_type_e literal_type = _tsl_parser_get_literal_type(create_return_value->value);
+    if (literal_type != reference_function->return_type)
+    {
+      printf("returning literal with incorrect type.\n");
+      return false;
+    }
+    char* endptr = NULL;
+    switch (literal_type)
+    {
+      case VAR_TYPE_INT:
+        reference_function->return_value.as_int = strtol(create_return_value->value, &endptr, 10);
+        break;
+
+      case VAR_TYPE_FLOAT:
+        reference_function->return_value.as_float = strtod(create_return_value->value, &endptr);
+        break;
+
+      case VAR_TYPE_BOOL:
+        reference_function->return_value.as_bool = create_return_value->value[0] == 't' ? true : false;
+        break;
+
+      case VAR_TYPE_STRING:
+        reference_function->return_value.as_string = strdup(create_return_value->value);
+        break;
+    }
+  }
+
+  reference_function->contains_return_value = true;
 
   return true;
 }

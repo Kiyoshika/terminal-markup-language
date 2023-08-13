@@ -31,7 +31,8 @@ bool
 tsl_parser_actions_text(
   struct parse_context_t* const context)
 {
-  if ((context->current_state & (TSL_STATE_CREATING_VAR | TSL_STATE_CREATING_FUNCTION | TSL_STATE_ADD_FUNCTION_ARG)) == 0)
+  if ((context->current_state 
+        & (TSL_STATE_CREATING_VAR | TSL_STATE_CREATING_FUNCTION | TSL_STATE_ADD_FUNCTION_ARG | TSL_STATE_CREATING_RETURN_VALUE)) == 0)
   {
     printf("invalid state.\n");
     return false;
@@ -39,7 +40,7 @@ tsl_parser_actions_text(
 
   if ((context->current_state & (TSL_STATE_CREATING_VAR | TSL_STATE_ADD_FUNCTION_ARG)) > 0 && !context->assigning_value)
     strncat(context->object_name, context->current_token_text, TSL_MAX_TOKEN_LEN);
-  else if (context->current_state == TSL_STATE_CREATING_VAR && context->assigning_value)
+  else if ((context->current_state & (TSL_STATE_CREATING_VAR | TSL_STATE_CREATING_RETURN_VALUE)) && context->assigning_value)
     strncat(context->object_value, context->current_token_text, TSL_MAX_TOKEN_LEN);
 
   return true;
@@ -67,7 +68,7 @@ bool
 tsl_parser_actions_minus(
   struct parse_context_t* const context)
 {
-  if (context->current_state != TSL_STATE_CREATING_VAR)
+  if ((context->current_state & (TSL_STATE_CREATING_VAR | TSL_STATE_CREATING_RETURN_VALUE)) == 0)
   {
     printf("invalid state.\n");
     return false;
@@ -95,6 +96,10 @@ tsl_parser_actions_semicolon(
     {
       case TSL_STATE_CREATING_VAR:
         success = tsl_parser_instructions_create_var(context);
+        break;
+
+      case TSL_STATE_CREATING_RETURN_VALUE:
+        success = tsl_parser_instructions_create_return_value(context);
         break;
     }
 
@@ -227,5 +232,26 @@ tsl_parser_actions_comma(
   memset(context->object_name, 0, TSL_MAX_TOKEN_LEN);
   context->datatype = TSL_TOKEN_NONE;
 
+  return true;
+}
+
+bool
+tsl_parser_actions_return(
+  struct parse_context_t* const context)
+{
+  if (context->assigning_value && context->inside_quotes)
+  {
+    strncat(context->object_value, "return", TSL_MAX_TOKEN_LEN);
+    return true;
+  }
+
+  if (context->current_state != TSL_STATE_CREATING_FUNCTION_BODY)
+  {
+    printf("invalid state.\n");
+    return false;
+  }
+
+  context->current_state = TSL_STATE_CREATING_RETURN_VALUE;
+  context->assigning_value = true;
   return true;
 }

@@ -19,4 +19,8 @@ bool
 tsl_parser_instructions_add_function_arg(
   struct parse_context_t* const context);
 
+bool
+tsl_parser_instructions_create_return_value(
+  struct parse_context_t* const context);
+
 #endif

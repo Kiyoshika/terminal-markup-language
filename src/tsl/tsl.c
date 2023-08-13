@@ -80,6 +80,11 @@ tsl_global_scope_execute_instructions(
         if (!tsl_execute_instructions_add_function_arg(global_scope, i))
           return false;
         break;
+
+      case INST_TYPE_CREATE_RETURN_VALUE:
+        if (!tsl_execute_instructions_create_return_value(global_scope, i))
+          return false;
+        break;
     }
   }
 

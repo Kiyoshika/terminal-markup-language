@@ -7,7 +7,7 @@
 
 int main()
 {
-  struct tsl_global_scope_t* global_scope = tsl_parser_parse("int myFunc123() {}");
+  struct tsl_global_scope_t* global_scope = tsl_parser_parse("int myFunc123() { return 0; }");
 
   if (!global_scope)
   {

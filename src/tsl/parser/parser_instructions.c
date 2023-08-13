@@ -122,3 +122,20 @@ tsl_parser_instructions_add_function_arg(
 
   return true;
 }
+
+bool
+tsl_parser_instructions_create_return_value(
+  struct parse_context_t* const context)
+{
+  if (strlen(context->reference_function_name) == 0)
+  {
+    printf("return value must be inside a function.\n");
+    return false;
+  }
+
+  struct instruction_t create_return_value;
+  inst_create_return_value(&create_return_value, context->reference_function_name, context->object_value);
+  tsl_global_scope_add_instruction(context->global_scope, &create_return_value);
+
+  return true;
+}

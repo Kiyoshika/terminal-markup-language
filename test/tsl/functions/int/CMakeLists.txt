@@ -5,3 +5,19 @@ add_test(NAME tsl_func_no_args_int COMMAND tsl_func_no_args_int)
 add_executable(tsl_func_with_args_int tsl_func_with_args.c)
 target_link_libraries(tsl_func_with_args_int tsl m)
 add_test(NAME tsl_func_with_args_int COMMAND tsl_func_with_args_int)
+
+add_executable(tsl_func_duplicate_args_int tsl_func_duplicate_args.c)
+target_link_libraries(tsl_func_duplicate_args_int tsl)
+add_test(NAME tsl_func_duplicate_args_int COMMAND tsl_func_duplicate_args_int)
+
+add_executable(tsl_func_return_literal_int tsl_func_return_literal.c)
+target_link_libraries(tsl_func_return_literal_int tsl)
+add_test(NAME tsl_func_return_literal_int COMMAND tsl_func_return_literal_int)
+
+add_executable(tsl_func_return_wrong_type_int tsl_func_return_wrong_type.c)
+target_link_libraries(tsl_func_return_wrong_type_int tsl)
+add_test(NAME tsl_func_return_wrong_type_int COMMAND tsl_func_return_wrong_type_int)
+
+add_executable(tsl_func_no_return_int tsl_func_no_return.c)
+target_link_libraries(tsl_func_no_return_int tsl)
+add_test(NAME tsl_func_no_return_int COMMAND tsl_func_no_return_int)

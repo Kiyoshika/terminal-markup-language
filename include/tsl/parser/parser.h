@@ -2,8 +2,8 @@
 #define PARSER_H
 
 #define TSL_MAX_TOKEN_LEN 101
-#define TSL_PARSING_STATES 5
-#define TSL_N_TOKENS 28
+#define TSL_PARSING_STATES 6
+#define TSL_N_TOKENS 29
 
 #include <stddef.h>
 #include <string.h>
@@ -23,6 +23,7 @@ enum parse_state_e
   TSL_STATE_ADD_FUNCTION_ARG = (1 << 2u),
   TSL_STATE_FUNCTION_CALL = (1 << 3u),
   TSL_STATE_CREATING_FUNCTION_BODY = (1 << 4u),
+  TSL_STATE_CREATING_RETURN_VALUE = (1 << 5u),
 };
 
 enum token_type_e
@@ -75,6 +76,7 @@ enum token_e
   TSL_TOKEN_SEMICOLON,
   TSL_TOKEN_QUOTE,
   TSL_TOKEN_SPACE,
+  TSL_TOKEN_RETURN,
 };
 
 struct parse_context_t

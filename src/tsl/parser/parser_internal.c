@@ -16,3 +16,27 @@ _tsl_parser_check_variable_exists_global(
 
   return false;
 }
+
+enum variable_type_e
+_tsl_parser_get_literal_type(
+  const char* const literal_value)
+{
+  const size_t len = strlen(literal_value);
+  if (len  == 0)
+    return VAR_TYPE_STRING;
+
+  if ((len >= 2 && literal_value[0] == '-' && isdigit(literal_value[1]))
+      || isdigit(literal_value[0]))
+  {
+    for (size_t i = 0; i < len; ++i)
+      if (literal_value[i] == '.')
+        return VAR_TYPE_FLOAT;
+    return VAR_TYPE_INT;
+  }
+
+  if (strcmp(literal_value, "true") == 0
+      || strcmp(literal_value, "false") == 0)
+    return VAR_TYPE_BOOL;
+
+  return VAR_TYPE_STRING;
+}

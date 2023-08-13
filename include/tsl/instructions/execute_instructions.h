@@ -32,4 +32,9 @@ tsl_execute_instructions_add_function_arg(
   struct tsl_global_scope_t* const global_scope,
   const size_t instruction_idx);
 
+bool
+tsl_execute_instructions_create_return_value(
+  struct tsl_global_scope_t* const global_scope,
+  const size_t instruction_idx);
+
 #endif
