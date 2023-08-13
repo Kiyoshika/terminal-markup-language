@@ -181,7 +181,9 @@ tsl_parser_parse(
     .object_value = {0},
 
     .inside_quotes = false,
-    .is_string_literal = false
+    .is_string_literal = false,
+
+    .reference_function_name = {0}
   };
 
   while (context.buffer_idx < context.buffer_len)
@@ -359,5 +361,7 @@ tsl_parser_reset_state(
 
   context->inside_quotes = false;
   context->is_string_literal = false;
+
+  memset(context->reference_function_name, 0, TSL_MAX_TOKEN_LEN);
 
 }

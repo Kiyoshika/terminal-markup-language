@@ -1,3 +1,7 @@
 add_executable(tsl_func_no_args_int tsl_func_no_args.c)
 target_link_libraries(tsl_func_no_args_int tsl)
 add_test(NAME tsl_func_no_args_int COMMAND tsl_func_no_args_int)
+
+add_executable(tsl_func_with_args_int tsl_func_with_args.c)
+target_link_libraries(tsl_func_with_args_int tsl m)
+add_test(NAME tsl_func_with_args_int COMMAND tsl_func_with_args_int)

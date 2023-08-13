@@ -165,14 +165,55 @@ tsl_execute_instructions_create_function(
     return false;
   }
 
-  struct function_t new_function = {
-    .return_type = create_function->return_type,
-    .name = {0},
-    .instruction_list = inst_list_create()
-  };
-  strncat(new_function.name, create_function->function_name, FUNC_NAME_MAX_LEN);
-
+  struct function_t* new_function 
+    = func_create(create_function->return_type, create_function->function_name);
+  
   func_list_add_function(
     global_scope->function_list,
-    &new_function);
+    new_function);
+}
+
+bool
+tsl_execute_instructions_add_function_arg(
+  struct tsl_global_scope_t* const global_scope,
+  const size_t instruction_idx)
+{
+  struct instruction_add_function_arg_t* add_function_arg
+    = &global_scope->instruction_list->instructions[instruction_idx].instruction.add_function_arg;
+
+  struct function_t* reference_function
+    = func_list_find(global_scope->function_list, add_function_arg->reference_function_name);
+
+  if (!reference_function)
+  {
+    printf("function '%s' does not exist.\n", add_function_arg->reference_function_name);
+    return false;
+  }
+
+  struct variable_t* arg_variable = NULL;
+
+  switch (add_function_arg->argument_type)
+  {
+    case VAR_TYPE_INT:
+      arg_variable = var_create_int(add_function_arg->argument_name, 0);
+      break;
+
+    case VAR_TYPE_FLOAT:
+      arg_variable = var_create_float(add_function_arg->argument_name, 0.0f);
+      break;
+
+    case VAR_TYPE_BOOL:
+      arg_variable = var_create_bool(add_function_arg->argument_name, false);
+      break;
+
+    case VAR_TYPE_STRING:
+      arg_variable = var_create_string(add_function_arg->argument_name, "");
+      break;
+  }
+
+  // function arguments are essentially treated like stack variables; they're created first
+  // before user-defined stack variables
+  func_add_variable(reference_function, arg_variable);
+
+  return true;
 }

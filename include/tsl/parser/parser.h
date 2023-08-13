@@ -20,7 +20,7 @@ enum parse_state_e
   TSL_STATE_NONE = 0u,
   TSL_STATE_CREATING_VAR = (1 << 0u),
   TSL_STATE_CREATING_FUNCTION = (1 << 1u),
-  TSL_STATE_ADDING_FUNCTION_PARAM = (1 << 2u),
+  TSL_STATE_ADD_FUNCTION_ARG = (1 << 2u),
   TSL_STATE_FUNCTION_CALL = (1 << 3u),
   TSL_STATE_CREATING_FUNCTION_BODY = (1 << 4u),
 };
@@ -108,6 +108,8 @@ struct parse_context_t
 
   bool inside_quotes;
   bool is_string_literal;
+
+  char reference_function_name[TSL_MAX_TOKEN_LEN];
 };
 
 struct tsl_global_scope_t*

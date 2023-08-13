@@ -83,6 +83,42 @@ tsl_parser_instructions_create_function(
   }
   inst_create_function(&create_function, context->object_name, return_type);
   tsl_global_scope_add_instruction(context->global_scope, &create_function);
+  strncat(context->reference_function_name, context->object_name, TSL_MAX_TOKEN_LEN);
+
+  return true;
+}
+
+bool
+tsl_parser_instructions_add_function_arg(
+  struct parse_context_t* const context)
+{
+  enum variable_type_e variable_type = 0;
+  switch (context->datatype)
+  {
+    case TSL_TOKEN_INT:
+      variable_type = VAR_TYPE_INT;
+      break;
+
+    case TSL_TOKEN_FLOAT:
+      variable_type = VAR_TYPE_FLOAT;
+      break;
+
+    case TSL_TOKEN_BOOL:
+      variable_type = VAR_TYPE_BOOL;
+      break;
+
+    case TSL_TOKEN_STRING:
+      variable_type = VAR_TYPE_STRING;
+      break;
+
+    default:
+      printf("unknown argument data type.\n");
+      return false;
+  }
+
+  struct instruction_t add_function_arg;
+  inst_add_function_arg(&add_function_arg, context->reference_function_name, context->object_name, variable_type);
+  tsl_global_scope_add_instruction(context->global_scope, &add_function_arg);
 
   return true;
 }

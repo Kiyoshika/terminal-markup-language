@@ -9,14 +9,19 @@ bool
 tsl_parser_actions_datatype(
   struct parse_context_t* const context)
 {
-  if (context->current_state != TSL_STATE_NONE)
+  if (context->current_state != TSL_STATE_NONE
+      && context->current_state != TSL_STATE_ADD_FUNCTION_ARG)
   {
     printf("invalid state.\n");
     return false;
   }
 
   // by default, we'll assume we're parsing a variable unless we run into a TSL_TOKEN_OPEN_PAREN
-  context->current_state = TSL_STATE_CREATING_VAR;
+  if (context->current_state == TSL_STATE_NONE)
+    context->current_state = TSL_STATE_CREATING_VAR;
+  // has no effect, but just here to make it explicit that we're keeping it in the function arg state
+  else
+    context->current_state = TSL_STATE_ADD_FUNCTION_ARG;
   context->datatype = context->current_token;
 
   return true;
@@ -26,13 +31,13 @@ bool
 tsl_parser_actions_text(
   struct parse_context_t* const context)
 {
-  if ((context->current_state & (TSL_STATE_CREATING_VAR | TSL_STATE_CREATING_FUNCTION)) == 0)
+  if ((context->current_state & (TSL_STATE_CREATING_VAR | TSL_STATE_CREATING_FUNCTION | TSL_STATE_ADD_FUNCTION_ARG)) == 0)
   {
     printf("invalid state.\n");
     return false;
   }
 
-  if (context->current_state == TSL_STATE_CREATING_VAR && !context->assigning_value)
+  if ((context->current_state & (TSL_STATE_CREATING_VAR | TSL_STATE_ADD_FUNCTION_ARG)) > 0 && !context->assigning_value)
     strncat(context->object_name, context->current_token_text, TSL_MAX_TOKEN_LEN);
   else if (context->current_state == TSL_STATE_CREATING_VAR && context->assigning_value)
     strncat(context->object_value, context->current_token_text, TSL_MAX_TOKEN_LEN);
@@ -110,16 +115,6 @@ tsl_parser_actions_quote(
 }
 
 bool
-tsl_parser_actions_comma(
-  struct parse_context_t* const context)
-{
-  if (context->assigning_value && context->inside_quotes)
-    strncat(context->object_value, ",", TSL_MAX_TOKEN_LEN);
-
-  return true;
-}
-
-bool
 tsl_parser_actions_open_paren(
   struct parse_context_t* const context)
 {
@@ -141,13 +136,15 @@ tsl_parser_actions_open_paren(
     case TSL_STATE_CREATING_VAR:
     {
       tsl_parser_instructions_create_function(context);
-      context->current_state = TSL_STATE_ADDING_FUNCTION_PARAM;
+      context->current_state = TSL_STATE_ADD_FUNCTION_ARG;
+      memset(context->object_name, 0, TSL_MAX_TOKEN_LEN);
       return true;
     }
 
     case TSL_STATE_NONE:
     {
       context->current_state = TSL_STATE_FUNCTION_CALL;
+      memset(context->object_name, 0, TSL_MAX_TOKEN_LEN);
       return true;
     }
 
@@ -167,11 +164,15 @@ tsl_parser_actions_close_paren(
     return true;
   }
 
-  if ((context->current_state & TSL_STATE_ADDING_FUNCTION_PARAM) == 0)
+  if ((context->current_state & TSL_STATE_ADD_FUNCTION_ARG) == 0)
   {
     printf("invalid state.\n");
     return false;
   }
+
+  if (strlen(context->object_name) > 0)
+    if (!tsl_parser_instructions_add_function_arg(context))
+      return false;
 
   context->current_state = TSL_STATE_CREATING_FUNCTION_BODY;
   return true;
@@ -201,5 +202,30 @@ tsl_parser_actions_close_body(
   }
 
   context->current_state = TSL_STATE_NONE;
+  return true;
+}
+
+bool
+tsl_parser_actions_comma(
+  struct parse_context_t* const context)
+{
+  if (context->assigning_value && context->inside_quotes)
+  {
+    strncat(context->object_value, ",", TSL_MAX_TOKEN_LEN);
+    return true;
+  }
+
+  if (context->current_state != TSL_STATE_ADD_FUNCTION_ARG)
+  {
+    printf("invalid state.\n");
+    return false;
+  }
+
+  if (!tsl_parser_instructions_add_function_arg(context))
+    return false;
+
+  memset(context->object_name, 0, TSL_MAX_TOKEN_LEN);
+  context->datatype = TSL_TOKEN_NONE;
+
   return true;
 }
